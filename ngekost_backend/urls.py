@@ -16,4 +16,7 @@ urlpatterns = [
 
     # Routing Aplikasi Users (API v1)
     path('api/v1/users/', include('users.urls')),
+
+    # Routing Aplikasi Kosts (API v1)
+    path('api/v1/', include('kosts.urls')),
 ]
