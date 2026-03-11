@@ -1,3 +1,6 @@
+# AI Agent Context (private instructions)
+docs/context/ai/
+
 # Python
 **pycache**/
 *.py[cod]
@@ -36,7 +39,6 @@ Thumbs.db
 # Testing / Coverage
 .coverage
 htmlcov/
-docs/ai/
 .pytest_cache/
 
 # Build

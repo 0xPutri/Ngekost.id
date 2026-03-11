@@ -1,14 +1,12 @@
-# Core Framework
+asgiref==3.11.1
 Django==5.0.3
-
-# REST Framework & Integrations
-djangorestframework==3.15.1
-djangorestframework-simplejwt==5.3.1
 django-cors-headers==4.3.1
 django-filter==24.1
-
-# Database
-psycopg[binary]
-
-# Utilities
+djangorestframework==3.15.1
+djangorestframework-simplejwt==5.3.1
+pillow==12.1.1
+psycopg==3.3.3
+psycopg-binary==3.3.3
+PyJWT==2.11.0
 python-dotenv==1.0.1
+sqlparse==0.5.5
