@@ -11,10 +11,6 @@ venv/
 env/
 .venv/
 
-# Environment Variables
-.env
-.env.*
-
 # Django
 *.log
 db.sqlite3
@@ -27,6 +23,9 @@ staticfiles/
 # Migrations
 */migrations/*
 !*/migrations/**init**.py
+
+# Environment Variables
+.env
 
 # IDE / Editor
 .vscode/
