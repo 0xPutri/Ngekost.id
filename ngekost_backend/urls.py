@@ -20,6 +20,7 @@ urlpatterns = [
     path('api/v1/users/', include('users.urls')),
     path('api/v1/', include('kosts.urls')),
     path('api/v1/', include('transactions.urls')),
+    path('api/v1/core/', include('core.urls')),
 ]
 
 if settings.DEBUG:
