@@ -13,6 +13,7 @@ if not allowed_hosts:
     raise ImproperlyConfigured("DJANGO_ALLOWED_HOSTS harus dikonfigurasi pada environment production.")
 
 ALLOWED_HOSTS = [host.strip() for host in allowed_hosts.split(',') if host.strip()]
+ENABLE_DJANGO_ADMIN = os.environ.get('ENABLE_DJANGO_ADMIN', 'False').lower() == 'true'
 
 cors_allowed_origins = os.environ.get('DJANGO_CORS_ALLOWED_ORIGINS')
 if not cors_allowed_origins:

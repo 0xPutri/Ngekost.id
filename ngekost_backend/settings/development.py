@@ -7,6 +7,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', default='')
 DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ENABLE_DJANGO_ADMIN = os.environ.get('ENABLE_DJANGO_ADMIN', 'False').lower() == 'true'
 
 DATABASES = {
     'default': {

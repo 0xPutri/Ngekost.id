@@ -15,7 +15,6 @@ def api_root_view(request):
 
 urlpatterns = [
     path('', api_root_view, name='api-root'),
-    path('admin/', admin.site.urls),
 
     # Routing Aplikasi (API v1)
     path('api/v1/users/', include('users.urls')),
@@ -28,6 +27,9 @@ urlpatterns = [
     path('api/docs/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/docs/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
+
+if getattr(settings, 'ENABLE_DJANGO_ADMIN', False):
+    urlpatterns.insert(1, path('admin/', admin.site.urls))
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
