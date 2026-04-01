@@ -5,6 +5,11 @@ from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
+handler400 = 'core.exceptions.bad_request_handler'
+handler403 = 'core.exceptions.permission_denied_handler'
+handler404 = 'core.exceptions.not_found_handler'
+handler500 = 'core.exceptions.server_error_handler'
+
 def api_root_view(request):
     """Root endpoint untuk mengecek status API."""
     return JsonResponse({

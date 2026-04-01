@@ -1,6 +1,8 @@
 import logging
 import time
 import uuid
+from django.http import Http404
+from .exceptions import build_unhandled_exception_response
 from .logging import clear_request_context, get_client_ip, set_request_context
 
 
@@ -37,14 +39,19 @@ class RequestContextLoggingMiddleware:
 
         try:
             response = self.get_response(request)
-        except Exception:
-            duration_ms = round((time.perf_counter() - request._logging_started_at) * 1000, 2)
-            logger.exception(
-                'Terjadi galat tak tertangani saat memproses permintaan API.',
-                extra={'durasi_ms': duration_ms},
-            )
+        except Http404:
             clear_request_context()
             raise
+        except Exception as exc:
+            duration_ms = round((time.perf_counter() - request._logging_started_at) * 1000, 2)
+            response = build_unhandled_exception_response(request, exc, request_id)
+            response['X-Request-ID'] = request_id
+            logger.error(
+                'Permintaan API dihentikan oleh penanganan galat global.',
+                extra={'status_code': response.status_code, 'durasi_ms': duration_ms},
+            )
+            clear_request_context()
+            return response
 
         authenticated_user = getattr(request, 'user', None)
         if getattr(authenticated_user, 'is_authenticated', False):
@@ -61,5 +68,6 @@ class RequestContextLoggingMiddleware:
                 'durasi_ms': duration_ms,
             },
         )
+        response['X-Request-ID'] = request_id
         clear_request_context()
         return response
