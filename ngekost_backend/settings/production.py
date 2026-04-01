@@ -1,11 +1,30 @@
 from .base import *
 import os
+from django.core.exceptions import ImproperlyConfigured
 
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', default='p5bmz^gv6a9z)&w#8q^kkbbq$lgp^)ub^0ps6knu%&(wxnz7z')
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    raise ImproperlyConfigured("DJANGO_SECRET_KEY harus dikonfigurasi pada environment production.")
 
 DEBUG = False
 
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'ngekost.biz.id,www.ngekost.biz.id').split(',')
+allowed_hosts = os.environ.get('DJANGO_ALLOWED_HOSTS')
+if not allowed_hosts:
+    raise ImproperlyConfigured("DJANGO_ALLOWED_HOSTS harus dikonfigurasi pada environment production.")
+
+ALLOWED_HOSTS = [host.strip() for host in allowed_hosts.split(',') if host.strip()]
+
+cors_allowed_origins = os.environ.get('DJANGO_CORS_ALLOWED_ORIGINS')
+if not cors_allowed_origins:
+    raise ImproperlyConfigured(
+        "DJANGO_CORS_ALLOWED_ORIGINS harus dikonfigurasi pada environment production."
+    )
+
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in cors_allowed_origins.split(',')
+    if origin.strip()
+]
 
 DATABASES = {
     'default': {
@@ -13,11 +32,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
-CORS_ALLOWED_ORIGINS = [
-    "https://ngekost.biz.id",
-    "https://www.ngekost.biz.id",
-]
 
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True

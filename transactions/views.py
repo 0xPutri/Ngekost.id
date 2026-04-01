@@ -2,10 +2,12 @@ from rest_framework import viewsets, status, parsers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Q
 from .models import Booking, PaymentProof
 from .serializers import BookingSerializer, PaymentProofSerializer
+from kosts.models import Room
 
 class BookingViewSet(viewsets.ModelViewSet):
     serializer_class = BookingSerializer
@@ -24,9 +26,17 @@ class BookingViewSet(viewsets.ModelViewSet):
         return qs.none()
     
     def perform_create(self, serializer):
+        if self.request.user.role != 'tenant':
+            raise PermissionDenied("Hanya tenant yang dapat membuat booking.")
+
         with transaction.atomic():
-            booking = serializer.save(tenant=self.request.user)
-            room = booking.room
+            requested_room = serializer.validated_data['room']
+            room = Room.objects.select_for_update().get(pk=requested_room.pk)
+
+            if room.status != 'available':
+                raise ValidationError({"room": "Kamar ini tidak tersedia untuk dipesan."})
+
+            booking = serializer.save(tenant=self.request.user, room=room)
             room.status = 'booked'
             room.save()
 
@@ -35,17 +45,27 @@ class BookingViewSet(viewsets.ModelViewSet):
         booking = self.get_object()
         if request.user != booking.tenant:
             return Response({"pesan": "Anda tidak berhak mengakses transaksi ini."}, status=status.HTTP_403_FORBIDDEN)
-        
-        if booking.status != 'pending_payment':
-            return Response({"pesan": "Transaksi ini tidak dalam status menunggu pembayaran."}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         serializer = PaymentProofSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(booking=booking)
-            booking.status = 'waiting_verification'
-            booking.save()
-            return Response({"pesan": "Bukti pembayaran berhasil diunggah. Menunggu verifikasi owner.", "data": serializer.data})
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+
+        with transaction.atomic():
+            locked_booking = Booking.objects.select_for_update().get(pk=booking.pk)
+
+            if locked_booking.status != 'pending_payment':
+                return Response(
+                    {"pesan": "Transaksi ini tidak dalam status menunggu pembayaran."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            serializer.save(booking=locked_booking)
+            locked_booking.status = 'waiting_verification'
+            locked_booking.save()
+
+        return Response({
+            "pesan": "Bukti pembayaran berhasil diunggah. Menunggu verifikasi owner.",
+            "data": serializer.data
+        })
     
     @action(detail=True, methods=['post'])
     def verify_payment(self, request, pk=None):

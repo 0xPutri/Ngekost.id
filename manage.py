@@ -2,10 +2,12 @@
 """Django's command-line utility for administrative tasks."""
 import sys
 import os
+from ngekost_backend.env import load_environment
 
 
 def main():
     """Run administrative tasks."""
+    load_environment()
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ngekost_backend.settings.development')
     try:
         from django.core.management import execute_from_command_line

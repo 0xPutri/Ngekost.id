@@ -1,6 +1,8 @@
 from .base import *
+import os
+from django.core.exceptions import ImproperlyConfigured
 
-SECRET_KEY = 'p5bmz^gv6a9z)&w#8q^kkbbq$lgp^)ub^0ps6knu%&(wxnz7z'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', default='')
 
 DEBUG = True
 
@@ -13,8 +15,13 @@ DATABASES = {
     }
 }
 
-# CORS configuration for local frontend development (Next.js / Flutter Web)
+development_cors_allowed_origins = os.environ.get(
+    'DJANGO_CORS_ALLOWED_ORIGINS',
+    'http://localhost:3000,http://127.0.0.1:3000',
+)
+
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    origin.strip()
+    for origin in development_cors_allowed_origins.split(',')
+    if origin.strip()
 ]

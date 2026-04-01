@@ -20,6 +20,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'username', 'role')
 
 class RegisterSerializer(serializers.ModelSerializer):
+    PUBLIC_REGISTRATION_ROLE = 'tenant'
+
     password = serializers.CharField(
         write_only=True, required=True, validators=[validate_password], style={'input_type': 'password'}
     )
@@ -34,6 +36,13 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs['password'] != attrs['password_confirm']:
             raise serializers.ValidationError({"Password": "Password dan Konfirmasi Password tidak cocok."})
+
+        requested_role = attrs.get('role', self.PUBLIC_REGISTRATION_ROLE)
+        if requested_role != self.PUBLIC_REGISTRATION_ROLE:
+            raise serializers.ValidationError({
+                "role": "Registrasi publik hanya dapat membuat akun tenant."
+            })
+
         return attrs
     
     def create(self, validated_data):
@@ -45,6 +54,6 @@ class RegisterSerializer(serializers.ModelSerializer):
             first_name=validated_data.get('first_name', ''),
             last_name=validated_data.get('last_name', ''),
             phone_number=validated_data.get('phone_number', ''),
-            role=validated_data.get('role', 'tenant') # Default role adalah tenant
+            role=self.PUBLIC_REGISTRATION_ROLE
         )
         return user

@@ -2,6 +2,19 @@ from rest_framework import serializers
 from .models import Kost, Room
 
 class RoomSerializer(serializers.ModelSerializer):
+    def validate_kost(self, value):
+        request = self.context.get('request')
+
+        if request is None or request.method in ('GET', 'HEAD', 'OPTIONS'):
+            return value
+
+        if value.owner != request.user:
+            raise serializers.ValidationError(
+                "Anda hanya dapat mengelola kamar untuk kost milik Anda sendiri."
+            )
+
+        return value
+
     class Meta:
         model = Room
         fields = ['id', 'kost', 'room_number', 'price', 'status', 'description', 'created_at']
