@@ -34,6 +34,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'core.middleware.RequestContextLoggingMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -98,6 +99,7 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10, # Paginasi default untuk mencegah overhead database
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema', # Integrasi OpenAPI
+    'EXCEPTION_HANDLER': 'core.exceptions.custom_exception_handler',
 }
 
 # Metadata Dokumentasi Swagger
@@ -116,4 +118,50 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'filters': {
+        'request_context': {
+            '()': 'core.logging.RequestContextFilter',
+        },
+    },
+    'formatters': {
+        'verbose_aman': {
+            '()': 'core.logging.SafeExtraFormatter',
+            'format': (
+                '[%(asctime)s] %(levelname)s %(name)s | pesan="%(message)s" | '
+                'request_id=%(request_id)s | metode=%(http_method)s | path=%(request_path)s | '
+                'user_id=%(user_id)s | peran=%(user_role)s | ip=%(client_ip)s | detail=%(extra_data)s'
+            ),
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'filters': ['request_context'],
+            'formatter': 'verbose_aman',
+        },
+    },
+    'loggers': {
+        'ngekost': {
+            'handlers': ['console'],
+            'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'django.security': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+    },
 }

@@ -1,3 +1,4 @@
+import logging
 from rest_framework import viewsets, mixins, filters
 from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
@@ -9,6 +10,7 @@ from transactions.models import Booking
 from transactions.serializers import BookingSerializer
 
 User = get_user_model()
+logger = logging.getLogger('ngekost.admin')
 
 class AdminUserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
     queryset = User.objects.all().order_by('-date_joined')
@@ -19,6 +21,13 @@ class AdminUserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.
     filterset_fields = ['role', 'is_active']
     search_fields = ['username', 'email', 'first_name']
 
+    def perform_destroy(self, instance):
+        logger.warning(
+            'Administrator menghapus akun pengguna.',
+            extra={'user_id_target': instance.id, 'role_target': instance.role, 'email': instance.email},
+        )
+        instance.delete()
+
 class AdminKostViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
     queryset = Kost.objects.select_related('owner').prefetch_related('rooms').order_by('-created_at')
     serializer_class = KostSerializer
@@ -27,6 +36,13 @@ class AdminKostViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.
 
     filterset_fields = ['owner__username']
     search_fields = ['name', 'address']
+
+    def perform_destroy(self, instance):
+        logger.warning(
+            'Administrator menghapus data kost.',
+            extra={'kost_id': instance.id, 'owner_id': instance.owner_id, 'nama_kost': instance.name},
+        )
+        instance.delete()
 
 class AdminBookingViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     queryset = Booking.objects.select_related(

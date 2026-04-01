@@ -1,3 +1,5 @@
+import logging
+
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -6,9 +8,27 @@ from django.contrib.auth import get_user_model
 from .serializers import RegisterSerializer, UserProfileSerializer, CustomTokenObtainPairSerializer
 
 User = get_user_model()
+logger = logging.getLogger('ngekost.users')
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        username = request.data.get('username')
+
+        if response.status_code == status.HTTP_200_OK:
+            logger.info(
+                'Autentikasi pengguna berhasil.',
+                extra={'username': username, 'status_code': response.status_code},
+            )
+        else:
+            logger.warning(
+                'Autentikasi pengguna gagal.',
+                extra={'username': username, 'status_code': response.status_code},
+            )
+
+        return response
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -19,6 +39,10 @@ class RegisterView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = self.perform_create(serializer)
+        logger.info(
+            'Registrasi akun baru berhasil diproses.',
+            extra={'user_id_baru': user.id, 'role': user.role, 'email': user.email},
+        )
 
         headers = self.get_success_headers(serializer.data)
         return Response(
@@ -50,6 +74,10 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+        logger.info(
+            'Profil pengguna berhasil diperbarui.',
+            extra={'user_id_target': instance.id, 'partial': partial},
+        )
 
         if getattr(instance, '_prefetched_objects_cache', None):
             instance._prefetched_objects_cache = {}
