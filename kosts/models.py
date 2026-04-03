@@ -140,3 +140,99 @@ class Room(models.Model):
             str: Nomor kamar beserta nama kost induknya.
         """
         return f"Kamar {self.room_number} - {self.kost.name}"
+
+
+class KostImage(models.Model):
+    """
+    Menyimpan file gambar yang terkait dengan sebuah kost.
+
+    Model ini dipakai untuk mendukung kebutuhan galeri atau dokumentasi visual
+    properti kost tanpa mengubah data inti kost maupun kamar.
+    """
+    kost = models.ForeignKey(
+        Kost,
+        on_delete=models.CASCADE,
+        related_name='images',
+        verbose_name='Kost',
+        help_text='Kost yang memiliki gambar ini.',
+    )
+    image = models.ImageField(
+        upload_to='kosts/%Y/%m/%d/',
+        verbose_name='Gambar Kost',
+        help_text='File gambar utama atau pendukung yang menampilkan kondisi kost.',
+    )
+    caption = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name='Keterangan Gambar',
+        help_text='Keterangan singkat untuk membantu admin atau owner mengenali isi gambar.',
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Dibuat Pada',
+        help_text='Waktu saat gambar kost pertama kali diunggah.',
+    )
+
+    class Meta:
+        ordering = ['created_at']
+        verbose_name = 'Gambar Kost'
+        verbose_name_plural = 'Galeri Gambar Kost'
+
+    def __str__(self):
+        """
+        Mengembalikan label gambar kost untuk kebutuhan admin dan debugging.
+
+        Returns:
+            str: Nama kost beserta identitas ringkas gambar.
+        """
+        if self.caption:
+            return f"{self.kost.name} - {self.caption}"
+        return f"{self.kost.name} - Gambar #{self.pk}"
+
+
+class RoomImage(models.Model):
+    """
+    Menyimpan file gambar yang terkait dengan sebuah kamar.
+
+    Model ini mendukung kebutuhan dokumentasi visual kamar agar calon tenant
+    dapat melihat kondisi unit secara lebih rinci.
+    """
+    room = models.ForeignKey(
+        Room,
+        on_delete=models.CASCADE,
+        related_name='images',
+        verbose_name='Kamar',
+        help_text='Kamar yang memiliki gambar ini.',
+    )
+    image = models.ImageField(
+        upload_to='rooms/%Y/%m/%d/',
+        verbose_name='Gambar Kamar',
+        help_text='File gambar yang menampilkan kondisi aktual kamar.',
+    )
+    caption = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name='Keterangan Gambar',
+        help_text='Keterangan singkat untuk membantu admin, owner, atau tenant memahami isi gambar.',
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Dibuat Pada',
+        help_text='Waktu saat gambar kamar pertama kali diunggah.',
+    )
+
+    class Meta:
+        ordering = ['created_at']
+        verbose_name = 'Gambar Kamar'
+        verbose_name_plural = 'Galeri Gambar Kamar'
+
+    def __str__(self):
+        """
+        Mengembalikan label gambar kamar untuk kebutuhan admin dan debugging.
+
+        Returns:
+            str: Nomor kamar beserta identitas ringkas gambar.
+        """
+        if self.caption:
+            return f"Kamar {self.room.room_number} - {self.caption}"
+        return f"Kamar {self.room.room_number} - Gambar #{self.pk}"

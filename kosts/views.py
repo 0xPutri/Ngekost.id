@@ -56,7 +56,7 @@ class KostViewSet(viewsets.ModelViewSet):
     ViewSet ini melayani kebutuhan tenant untuk mencari kost sekaligus
     kebutuhan owner untuk membuat dan mengelola properti miliknya.
     """
-    queryset = Kost.objects.all().prefetch_related('rooms') # Mencegah N+1 Queries
+    queryset = Kost.objects.all().prefetch_related('images', 'rooms__images', 'rooms') # Mencegah N+1 Queries
     permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
 
@@ -121,7 +121,7 @@ class RoomViewSet(viewsets.ModelViewSet):
     ViewSet ini dipakai owner untuk menambah dan memperbarui kamar, serta
     dipakai tenant untuk melihat ketersediaan kamar secara terbuka.
     """
-    queryset = Room.objects.all().select_related('kost') # Mencegah N+1 Queries
+    queryset = Room.objects.all().select_related('kost').prefetch_related('images') # Mencegah N+1 Queries
     serializer_class = RoomSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]

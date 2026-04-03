@@ -2,7 +2,21 @@ from decimal import Decimal
 from rest_framework import serializers
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
-from .models import Kost, Room
+from .models import Kost, KostImage, Room, RoomImage
+
+
+class RoomImageSerializer(serializers.ModelSerializer):
+    """
+    Menyajikan data gambar kamar untuk kebutuhan galeri pada API.
+
+    Serializer ini bersifat baca agar gambar kamar langsung tampil pada
+    response tanpa mengubah kontrak penulisan endpoint kamar yang ada.
+    """
+
+    class Meta:
+        model = RoomImage
+        fields = ['id', 'image', 'caption', 'created_at']
+        read_only_fields = ['id', 'created_at']
 
 class RoomSerializer(serializers.ModelSerializer):
     """
@@ -11,6 +25,7 @@ class RoomSerializer(serializers.ModelSerializer):
     Serializer ini memastikan owner hanya dapat mengelola kamar yang berada
     pada kost miliknya sendiri.
     """
+    images = RoomImageSerializer(many=True, read_only=True)
 
     def validate_kost(self, value):
         """
@@ -39,7 +54,21 @@ class RoomSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Room
-        fields = ['id', 'kost', 'room_number', 'price', 'status', 'description', 'created_at']
+        fields = ['id', 'kost', 'room_number', 'price', 'status', 'description', 'images', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
+
+class KostImageSerializer(serializers.ModelSerializer):
+    """
+    Menyajikan data gambar kost untuk kebutuhan galeri pada API.
+
+    Serializer ini hanya bersifat baca agar data visual kost dapat tampil
+    pada response tanpa mengubah kontrak penulisan endpoint kost yang ada.
+    """
+
+    class Meta:
+        model = KostImage
+        fields = ['id', 'image', 'caption', 'created_at']
         read_only_fields = ['id', 'created_at']
 
 class KostSerializer(serializers.ModelSerializer):
@@ -51,10 +80,11 @@ class KostSerializer(serializers.ModelSerializer):
     """
     min_price = serializers.SerializerMethodField()
     owner_name = serializers.ReadOnlyField(source='owner.username')
+    images = KostImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Kost
-        fields = ['id', 'owner', 'owner_name', 'name', 'address', 'description', 'facilities', 'latitude', 'longitude', 'min_price', 'created_at']
+        fields = ['id', 'owner', 'owner_name', 'name', 'address', 'description', 'facilities', 'latitude', 'longitude', 'min_price', 'images', 'created_at']
         read_only_fields = ['id', 'owner', 'created_at']
 
     @extend_schema_field(OpenApiTypes.DECIMAL)

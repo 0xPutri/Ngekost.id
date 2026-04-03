@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Kost, Room
+from .models import Kost, KostImage, Room, RoomImage
 
 class RoomInline(admin.TabularInline):
     """
@@ -9,6 +9,28 @@ class RoomInline(admin.TabularInline):
     satu tampilan pengelolaan.
     """
     model = Room
+    extra = 1
+
+
+class KostImageInline(admin.TabularInline):
+    """
+    Menampilkan galeri gambar langsung di halaman admin kost.
+
+    Konfigurasi ini memudahkan admin atau owner internal melihat dan mengelola
+    dokumentasi visual properti dalam satu halaman.
+    """
+    model = KostImage
+    extra = 1
+
+
+class RoomImageInline(admin.TabularInline):
+    """
+    Menampilkan galeri gambar langsung di halaman admin kamar.
+
+    Konfigurasi ini memudahkan pengelolaan visual kamar tanpa perlu membuka
+    menu terpisah untuk setiap file gambar.
+    """
+    model = RoomImage
     extra = 1
 
 @admin.register(Kost)
@@ -22,7 +44,7 @@ class KostAdmin(admin.ModelAdmin):
     list_display = ('name', 'owner', 'created_at')
     search_fields = ('name', 'address', 'owner__username')
     list_filter = ('created_at',)
-    inlines = [RoomInline]
+    inlines = [RoomInline, KostImageInline]
 
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
@@ -35,3 +57,30 @@ class RoomAdmin(admin.ModelAdmin):
     list_display = ('room_number', 'kost', 'price', 'status')
     list_filter = ('status', 'kost')
     search_fields = ('room_number', 'kost__name')
+    inlines = [RoomImageInline]
+
+
+@admin.register(KostImage)
+class KostImageAdmin(admin.ModelAdmin):
+    """
+    Menata tampilan daftar gambar kost pada panel admin Django.
+
+    Tampilan ini membantu pencarian gambar berdasarkan kost dan pengelolaan
+    dokumentasi visual properti secara terpisah bila diperlukan.
+    """
+    list_display = ('kost', 'caption', 'created_at')
+    list_filter = ('kost', 'created_at')
+    search_fields = ('kost__name', 'caption')
+
+
+@admin.register(RoomImage)
+class RoomImageAdmin(admin.ModelAdmin):
+    """
+    Menata tampilan daftar gambar kamar pada panel admin Django.
+
+    Tampilan ini membantu pencarian gambar berdasarkan kamar dan pengelolaan
+    dokumentasi visual unit secara terpisah bila diperlukan.
+    """
+    list_display = ('room', 'caption', 'created_at')
+    list_filter = ('room', 'created_at')
+    search_fields = ('room__room_number', 'room__kost__name', 'caption')
