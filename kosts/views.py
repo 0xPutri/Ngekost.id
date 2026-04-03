@@ -1,10 +1,18 @@
 import logging
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, parsers
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view
-from .models import Kost, Room
-from .serializers import KostSerializer, KostDetailSerializer, RoomSerializer
+from .models import Kost, KostImage, Room, RoomImage
+from .serializers import (
+    KostDetailSerializer,
+    KostImageSerializer,
+    KostImageWriteSerializer,
+    KostSerializer,
+    RoomImageSerializer,
+    RoomImageWriteSerializer,
+    RoomSerializer,
+)
 from .permissions import IsOwnerOrReadOnly
 
 logger = logging.getLogger('ngekost.kosts')
@@ -182,6 +190,122 @@ class RoomViewSet(viewsets.ModelViewSet):
             },
         )
         instance.delete()
+
+
+@extend_schema_view(
+    list=extend_schema(
+        tags=['Kost'],
+        summary='Daftar gambar kost',
+        description='Mengambil daftar gambar kost. Publik dapat membaca, owner dapat mengelola gambar miliknya.',
+        parameters=[
+            OpenApiParameter(name='kost', description='ID kost untuk memfilter gambar.', required=False, type=int),
+            OpenApiParameter(name='page', description='Nomor halaman hasil paginasi.', required=False, type=int),
+        ],
+    ),
+    retrieve=extend_schema(
+        tags=['Kost'],
+        summary='Detail gambar kost',
+        description='Mengambil detail satu gambar kost.',
+    ),
+    create=extend_schema(
+        tags=['Kost'],
+        summary='Unggah gambar kost',
+        description='Mengunggah satu gambar ke kost milik owner yang sedang login.',
+        request=KostImageWriteSerializer,
+    ),
+    update=extend_schema(
+        tags=['Kost'],
+        summary='Perbarui gambar kost',
+        description='Memperbarui data gambar kost milik owner yang sedang login.',
+    ),
+    partial_update=extend_schema(
+        tags=['Kost'],
+        summary='Perbarui sebagian gambar kost',
+        description='Memperbarui sebagian data gambar kost milik owner yang sedang login.',
+    ),
+    destroy=extend_schema(
+        tags=['Kost'],
+        summary='Hapus gambar kost',
+        description='Menghapus gambar kost milik owner yang sedang login.',
+        responses={204: OpenApiResponse(description='Gambar kost berhasil dihapus.')},
+    ),
+)
+class KostImageViewSet(viewsets.ModelViewSet):
+    """
+    Mengelola endpoint galeri gambar untuk properti kost.
+
+    ViewSet ini memungkinkan owner menambah, memperbarui, dan menghapus
+    gambar kost, sementara publik tetap dapat melihat galeri yang tersedia.
+    """
+
+    queryset = KostImage.objects.all().select_related('kost', 'kost__owner')
+    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    parser_classes = [parsers.MultiPartParser, parsers.FormParser, parsers.JSONParser]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['kost']
+
+    def get_serializer_class(self):
+        if self.action in ('create', 'update', 'partial_update'):
+            return KostImageWriteSerializer
+        return KostImageSerializer
+
+
+@extend_schema_view(
+    list=extend_schema(
+        tags=['Kamar'],
+        summary='Daftar gambar kamar',
+        description='Mengambil daftar gambar kamar. Publik dapat membaca, owner dapat mengelola gambar miliknya.',
+        parameters=[
+            OpenApiParameter(name='room', description='ID kamar untuk memfilter gambar.', required=False, type=int),
+            OpenApiParameter(name='page', description='Nomor halaman hasil paginasi.', required=False, type=int),
+        ],
+    ),
+    retrieve=extend_schema(
+        tags=['Kamar'],
+        summary='Detail gambar kamar',
+        description='Mengambil detail satu gambar kamar.',
+    ),
+    create=extend_schema(
+        tags=['Kamar'],
+        summary='Unggah gambar kamar',
+        description='Mengunggah satu gambar ke kamar pada kost milik owner yang sedang login.',
+        request=RoomImageWriteSerializer,
+    ),
+    update=extend_schema(
+        tags=['Kamar'],
+        summary='Perbarui gambar kamar',
+        description='Memperbarui data gambar kamar milik owner yang sedang login.',
+    ),
+    partial_update=extend_schema(
+        tags=['Kamar'],
+        summary='Perbarui sebagian gambar kamar',
+        description='Memperbarui sebagian data gambar kamar milik owner yang sedang login.',
+    ),
+    destroy=extend_schema(
+        tags=['Kamar'],
+        summary='Hapus gambar kamar',
+        description='Menghapus gambar kamar milik owner yang sedang login.',
+        responses={204: OpenApiResponse(description='Gambar kamar berhasil dihapus.')},
+    ),
+)
+class RoomImageViewSet(viewsets.ModelViewSet):
+    """
+    Mengelola endpoint galeri gambar untuk setiap kamar.
+
+    ViewSet ini memungkinkan owner mengelola dokumentasi visual kamar tanpa
+    mencampur operasi upload file ke endpoint kamar utama.
+    """
+
+    queryset = RoomImage.objects.all().select_related('room', 'room__kost', 'room__kost__owner')
+    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    parser_classes = [parsers.MultiPartParser, parsers.FormParser, parsers.JSONParser]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['room']
+
+    def get_serializer_class(self):
+        if self.action in ('create', 'update', 'partial_update'):
+            return RoomImageWriteSerializer
+        return RoomImageSerializer
 
 
 RoomViewSet = extend_schema_view(

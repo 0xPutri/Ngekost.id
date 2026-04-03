@@ -22,6 +22,8 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
             return obj.owner
         elif hasattr(obj, 'kost'):
             return obj.kost.owner
+        elif hasattr(obj, 'room'):
+            return obj.room.kost.owner
         return None
     
     def has_permission(self, request, view):

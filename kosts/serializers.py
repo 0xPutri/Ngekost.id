@@ -18,6 +18,33 @@ class RoomImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'image', 'caption', 'created_at']
         read_only_fields = ['id', 'created_at']
 
+
+class RoomImageWriteSerializer(serializers.ModelSerializer):
+    """
+    Memvalidasi pembuatan dan perubahan gambar kamar oleh owner.
+
+    Serializer ini memastikan gambar hanya dapat dikaitkan ke kamar yang
+    dimiliki oleh owner yang sedang login.
+    """
+
+    def validate_room(self, value):
+        request = self.context.get('request')
+
+        if request is None or request.method in ('GET', 'HEAD', 'OPTIONS'):
+            return value
+
+        if value.kost.owner != request.user:
+            raise serializers.ValidationError(
+                "Anda hanya dapat mengelola gambar untuk kamar pada kost milik Anda sendiri."
+            )
+
+        return value
+
+    class Meta:
+        model = RoomImage
+        fields = ['id', 'room', 'image', 'caption', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
 class RoomSerializer(serializers.ModelSerializer):
     """
     Menyajikan dan memvalidasi data kamar pada API kost.
@@ -69,6 +96,33 @@ class KostImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = KostImage
         fields = ['id', 'image', 'caption', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
+
+class KostImageWriteSerializer(serializers.ModelSerializer):
+    """
+    Memvalidasi pembuatan dan perubahan gambar kost oleh owner.
+
+    Serializer ini memastikan gambar hanya dapat dikaitkan ke kost milik
+    owner yang sedang login.
+    """
+
+    def validate_kost(self, value):
+        request = self.context.get('request')
+
+        if request is None or request.method in ('GET', 'HEAD', 'OPTIONS'):
+            return value
+
+        if value.owner != request.user:
+            raise serializers.ValidationError(
+                "Anda hanya dapat mengelola gambar untuk kost milik Anda sendiri."
+            )
+
+        return value
+
+    class Meta:
+        model = KostImage
+        fields = ['id', 'kost', 'image', 'caption', 'created_at']
         read_only_fields = ['id', 'created_at']
 
 class KostSerializer(serializers.ModelSerializer):
