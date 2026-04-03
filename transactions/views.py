@@ -5,18 +5,111 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.db.models import Q
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view
 from .models import Booking, PaymentProof
 from .serializers import BookingSerializer, PaymentProofSerializer
 from kosts.models import Room
+from users.schema import GenericStatusSerializer, PaymentUploadResponseSerializer, VerifyPaymentRequestSerializer
 
 logger = logging.getLogger('ngekost.transactions')
 
+@extend_schema_view(
+    list=extend_schema(
+        tags=['Booking'],
+        summary='Daftar booking',
+        description=(
+            'Mengambil daftar booking sesuai peran pengguna. Tenant hanya melihat booking miliknya, '
+            'owner melihat booking pada kost yang dimiliki, dan admin melihat seluruh booking.'
+        ),
+        parameters=[
+            OpenApiParameter(name='page', description='Nomor halaman hasil paginasi.', required=False, type=int),
+        ],
+    ),
+    retrieve=extend_schema(
+        tags=['Booking'],
+        summary='Detail booking',
+        description='Mengambil detail satu booking yang diizinkan untuk diakses oleh pengguna.',
+        parameters=[
+            OpenApiParameter(
+                name='id',
+                location=OpenApiParameter.PATH,
+                description='ID booking.',
+                required=True,
+                type=OpenApiTypes.INT,
+            ),
+        ],
+    ),
+    create=extend_schema(
+        tags=['Booking'],
+        summary='Buat booking baru',
+        description='Membuat transaksi booking kamar. Hanya tenant yang dapat melakukan aksi ini.',
+        responses={
+            201: BookingSerializer,
+            403: OpenApiResponse(description='Hanya tenant yang dapat membuat booking.'),
+            400: OpenApiResponse(description='Kamar tidak tersedia atau data booking tidak valid.'),
+        },
+        examples=[
+            OpenApiExample(
+                'Contoh Booking',
+                value={'room': 1, 'start_date': '2025-02-01', 'duration_months': 3},
+                request_only=True,
+            ),
+        ],
+    ),
+    update=extend_schema(
+        tags=['Booking'],
+        summary='Perbarui booking',
+        description='Memperbarui seluruh data booking jika diizinkan oleh aturan akses aplikasi.',
+        parameters=[
+            OpenApiParameter(
+                name='id',
+                location=OpenApiParameter.PATH,
+                description='ID booking.',
+                required=True,
+                type=OpenApiTypes.INT,
+            ),
+        ],
+    ),
+    partial_update=extend_schema(
+        tags=['Booking'],
+        summary='Perbarui sebagian booking',
+        description='Memperbarui sebagian data booking jika diizinkan oleh aturan akses aplikasi.',
+        parameters=[
+            OpenApiParameter(
+                name='id',
+                location=OpenApiParameter.PATH,
+                description='ID booking.',
+                required=True,
+                type=OpenApiTypes.INT,
+            ),
+        ],
+    ),
+    destroy=extend_schema(
+        tags=['Booking'],
+        summary='Batalkan atau hapus booking',
+        description='Menghapus data booking jika diizinkan oleh aturan akses aplikasi.',
+        parameters=[
+            OpenApiParameter(
+                name='id',
+                location=OpenApiParameter.PATH,
+                description='ID booking.',
+                required=True,
+                type=OpenApiTypes.INT,
+            ),
+        ],
+        responses={204: OpenApiResponse(description='Booking berhasil dihapus.')},
+    ),
+)
 class BookingViewSet(viewsets.ModelViewSet):
+    queryset = Booking.objects.none()
     serializer_class = BookingSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Booking.objects.none()
+
         user = self.request.user
         qs = Booking.objects.select_related('room__kost', 'tenant').prefetch_related('payment_proof')
 
@@ -60,6 +153,32 @@ class BookingViewSet(viewsets.ModelViewSet):
                 },
             )
 
+    @extend_schema(
+        tags=['Pembayaran'],
+        summary='Unggah bukti pembayaran',
+        description=(
+            'Mengunggah bukti pembayaran untuk booking milik tenant. '
+            'Aksi ini hanya valid jika status booking masih `pending_payment`.'
+        ),
+        parameters=[
+            OpenApiParameter(
+                name='id',
+                location=OpenApiParameter.PATH,
+                description='ID booking.',
+                required=True,
+                type=OpenApiTypes.INT,
+            ),
+        ],
+        request=PaymentProofSerializer,
+        responses={
+            200: OpenApiResponse(
+                response=PaymentUploadResponseSerializer,
+                description='Bukti pembayaran berhasil diunggah.',
+            ),
+            400: OpenApiResponse(description='Status booking tidak valid untuk unggah bukti pembayaran.'),
+            403: OpenApiResponse(description='Pengguna bukan tenant pemilik booking.'),
+        },
+    )
     @action(detail=True, methods=['post'], parser_classes=[parsers.MultiPartParser, parsers.FormParser])
     def upload_payment(self, request, pk=None):
         booking = self.get_object()
@@ -103,6 +222,42 @@ class BookingViewSet(viewsets.ModelViewSet):
             "data": serializer.data
         })
     
+    @extend_schema(
+        tags=['Pembayaran'],
+        summary='Verifikasi pembayaran booking',
+        description=(
+            'Memungkinkan owner menyetujui atau menolak bukti pembayaran. '
+            'Jika disetujui maka status booking menjadi `paid` dan kamar menjadi `occupied`. '
+            'Jika ditolak maka booking menjadi `rejected` dan kamar kembali `available`.'
+        ),
+        parameters=[
+            OpenApiParameter(
+                name='id',
+                location=OpenApiParameter.PATH,
+                description='ID booking.',
+                required=True,
+                type=OpenApiTypes.INT,
+            ),
+        ],
+        request=VerifyPaymentRequestSerializer,
+        responses={
+            200: GenericStatusSerializer,
+            400: OpenApiResponse(description='Parameter aksi tidak valid atau booking belum siap diverifikasi.'),
+            403: OpenApiResponse(description='Hanya owner dari kost terkait yang dapat memverifikasi.'),
+        },
+        examples=[
+            OpenApiExample(
+                'Setujui Pembayaran',
+                value={'action': 'approve'},
+                request_only=True,
+            ),
+            OpenApiExample(
+                'Tolak Pembayaran',
+                value={'action': 'reject'},
+                request_only=True,
+            ),
+        ],
+    )
     @action(detail=True, methods=['post'])
     def verify_payment(self, request, pk=None):
         booking = self.get_object()

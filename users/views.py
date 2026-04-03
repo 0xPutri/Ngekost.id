@@ -1,15 +1,41 @@
 import logging
-
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
+from drf_spectacular.utils import OpenApiExample, OpenApiResponse, extend_schema, extend_schema_view
 from django.contrib.auth import get_user_model
 from .serializers import RegisterSerializer, UserProfileSerializer, CustomTokenObtainPairSerializer
+from .schema import AuthTokenResponseSerializer, RegisterSuccessResponseSerializer
 
 User = get_user_model()
 logger = logging.getLogger('ngekost.users')
 
+@extend_schema(
+    tags=['Autentikasi'],
+    summary='Login pengguna',
+    description=(
+        'Mengautentikasi pengguna menggunakan `username` dan `password`, lalu '
+        'mengembalikan pasangan token JWT berupa `access` dan `refresh`.'
+    ),
+    responses={
+        200: AuthTokenResponseSerializer,
+        401: OpenApiResponse(description='Kredensial tidak valid.'),
+    },
+    examples=[
+        OpenApiExample(
+            'Contoh Login',
+            value={'username': 'tenant_demo', 'password': 'KatasandiAman123!'},
+            request_only=True,
+        ),
+        OpenApiExample(
+            'Contoh Response Login',
+            value={'refresh': '<refresh_token>', 'access': '<access_token>'},
+            response_only=True,
+            status_codes=['200'],
+        ),
+    ],
+)
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
@@ -30,6 +56,18 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
         return response
 
+@extend_schema(
+    tags=['Autentikasi'],
+    summary='Registrasi akun tenant',
+    description=(
+        'Mendaftarkan akun baru untuk peran `tenant`. Registrasi publik tidak '
+        'dapat digunakan untuk membuat akun `owner` atau `admin`.'
+    ),
+    responses={
+        201: RegisterSuccessResponseSerializer,
+        400: OpenApiResponse(description='Validasi data gagal, misalnya password tidak cocok atau role tidak valid.'),
+    },
+)
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
@@ -61,6 +99,23 @@ class RegisterView(generics.CreateAPIView):
     def perform_create(self, serializer):
         return serializer.save()
 
+@extend_schema_view(
+    get=extend_schema(
+        tags=['Profil Pengguna'],
+        summary='Lihat profil pengguna aktif',
+        description='Mengambil detail profil milik pengguna yang sedang terautentikasi.',
+    ),
+    put=extend_schema(
+        tags=['Profil Pengguna'],
+        summary='Perbarui profil pengguna aktif',
+        description='Memperbarui profil pengguna yang sedang login secara penuh.',
+    ),
+    patch=extend_schema(
+        tags=['Profil Pengguna'],
+        summary='Perbarui sebagian profil pengguna aktif',
+        description='Memperbarui sebagian data profil pengguna yang sedang login.',
+    ),
+)
 class UserProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer
     permission_classes = (IsAuthenticated,)

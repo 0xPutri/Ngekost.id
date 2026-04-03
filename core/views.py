@@ -2,6 +2,7 @@ import logging
 from rest_framework import viewsets, mixins, filters
 from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from .permissions import IsAdminRole
 from users.serializers import UserProfileSerializer
 from kosts.models import Kost
@@ -12,6 +13,29 @@ from transactions.serializers import BookingSerializer
 User = get_user_model()
 logger = logging.getLogger('ngekost.admin')
 
+@extend_schema_view(
+    list=extend_schema(
+        tags=['Admin Panel'],
+        summary='Daftar pengguna',
+        description='Menampilkan daftar seluruh pengguna untuk kebutuhan pengawasan administrator.',
+        parameters=[
+            OpenApiParameter(name='role', description='Filter berdasarkan peran pengguna.', required=False, type=str),
+            OpenApiParameter(name='is_active', description='Filter status aktif pengguna.', required=False, type=bool),
+            OpenApiParameter(name='search', description='Pencarian username, email, atau nama depan.', required=False, type=str),
+            OpenApiParameter(name='page', description='Nomor halaman hasil paginasi.', required=False, type=int),
+        ],
+    ),
+    retrieve=extend_schema(
+        tags=['Admin Panel'],
+        summary='Detail pengguna',
+        description='Mengambil detail satu pengguna untuk kebutuhan administratif.',
+    ),
+    destroy=extend_schema(
+        tags=['Admin Panel'],
+        summary='Hapus pengguna',
+        description='Menghapus akun pengguna dari sistem. Khusus administrator.',
+    ),
+)
 class AdminUserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserProfileSerializer
@@ -54,3 +78,51 @@ class AdminBookingViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, view
 
     filterset_fields = ['status']
     search_fields = ['tenant__username', 'room__kost__name', 'room__room_number']
+
+
+AdminKostViewSet = extend_schema_view(
+    list=extend_schema(
+        tags=['Admin Panel'],
+        summary='Daftar kost untuk admin',
+        description='Menampilkan seluruh data kost untuk kebutuhan audit dan moderasi administrator.',
+        parameters=[
+            OpenApiParameter(name='owner__username', description='Filter berdasarkan username owner.', required=False, type=str),
+            OpenApiParameter(name='search', description='Pencarian nama atau alamat kost.', required=False, type=str),
+            OpenApiParameter(name='page', description='Nomor halaman hasil paginasi.', required=False, type=int),
+        ],
+    ),
+    retrieve=extend_schema(
+        tags=['Admin Panel'],
+        summary='Detail kost untuk admin',
+        description='Mengambil detail kost tertentu pada panel administrator.',
+    ),
+    destroy=extend_schema(
+        tags=['Admin Panel'],
+        summary='Hapus kost oleh admin',
+        description='Menghapus data kost dari sistem. Khusus administrator.',
+    ),
+)(AdminKostViewSet)
+
+
+AdminBookingViewSet = extend_schema_view(
+    list=extend_schema(
+        tags=['Admin Panel'],
+        summary='Daftar booking untuk admin',
+        description='Menampilkan seluruh transaksi booking untuk pengawasan operasional administrator.',
+        parameters=[
+            OpenApiParameter(name='status', description='Filter berdasarkan status booking.', required=False, type=str),
+            OpenApiParameter(
+                name='search',
+                description='Pencarian berdasarkan username tenant, nama kost, atau nomor kamar.',
+                required=False,
+                type=str,
+            ),
+            OpenApiParameter(name='page', description='Nomor halaman hasil paginasi.', required=False, type=int),
+        ],
+    ),
+    retrieve=extend_schema(
+        tags=['Admin Panel'],
+        summary='Detail booking untuk admin',
+        description='Mengambil detail transaksi booking tertentu untuk kebutuhan audit administrator.',
+    ),
+)(AdminBookingViewSet)

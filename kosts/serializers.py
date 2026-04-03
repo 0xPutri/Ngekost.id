@@ -1,4 +1,7 @@
+from decimal import Decimal
 from rest_framework import serializers
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
 from .models import Kost, Room
 
 class RoomSerializer(serializers.ModelSerializer):
@@ -29,7 +32,8 @@ class KostSerializer(serializers.ModelSerializer):
         fields = ['id', 'owner', 'owner_name', 'name', 'address', 'description', 'facilities', 'latitude', 'longitude', 'min_price', 'created_at']
         read_only_fields = ['id', 'owner', 'created_at']
 
-    def get_min_price(self, obj):
+    @extend_schema_field(OpenApiTypes.DECIMAL)
+    def get_min_price(self, obj) -> Decimal | None:
         rooms = obj.rooms.all()
         if rooms.exists():
             return min(room.price for room in rooms)

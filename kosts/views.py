@@ -2,12 +2,53 @@ import logging
 from rest_framework import viewsets, filters
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view
 from .models import Kost, Room
 from .serializers import KostSerializer, KostDetailSerializer, RoomSerializer
 from .permissions import IsOwnerOrReadOnly
 
 logger = logging.getLogger('ngekost.kosts')
 
+@extend_schema_view(
+    list=extend_schema(
+        tags=['Kost'],
+        summary='Daftar kost',
+        description='Mengambil daftar kost yang tersedia di platform. Mendukung filter, pencarian, dan pengurutan.',
+        parameters=[
+            OpenApiParameter(name='address', description='Filter berdasarkan alamat kost.', required=False, type=str),
+            OpenApiParameter(name='search', description='Pencarian pada nama kost, alamat, atau fasilitas.', required=False, type=str),
+            OpenApiParameter(name='ordering', description='Urutkan berdasarkan `created_at`.', required=False, type=str),
+            OpenApiParameter(name='page', description='Nomor halaman hasil paginasi.', required=False, type=int),
+        ],
+    ),
+    retrieve=extend_schema(
+        tags=['Kost'],
+        summary='Detail kost',
+        description='Mengambil detail satu kost beserta daftar kamar yang terkait.',
+    ),
+    create=extend_schema(
+        tags=['Kost'],
+        summary='Buat kost baru',
+        description='Mendaftarkan data kost baru. Hanya dapat dilakukan oleh pengguna dengan peran owner.',
+        responses={201: KostSerializer, 403: OpenApiResponse(description='Hanya owner yang dapat membuat kost.')},
+    ),
+    update=extend_schema(
+        tags=['Kost'],
+        summary='Perbarui kost',
+        description='Memperbarui seluruh data kost milik owner yang sedang login.',
+    ),
+    partial_update=extend_schema(
+        tags=['Kost'],
+        summary='Perbarui sebagian data kost',
+        description='Memperbarui sebagian atribut kost milik owner yang sedang login.',
+    ),
+    destroy=extend_schema(
+        tags=['Kost'],
+        summary='Hapus kost',
+        description='Menghapus data kost milik owner yang sedang login.',
+        responses={204: OpenApiResponse(description='Kost berhasil dihapus.')},
+    ),
+)
 class KostViewSet(viewsets.ModelViewSet):
     queryset = Kost.objects.all().prefetch_related('rooms') # Mencegah N+1 Queries
     permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
@@ -87,3 +128,49 @@ class RoomViewSet(viewsets.ModelViewSet):
             },
         )
         instance.delete()
+
+
+RoomViewSet = extend_schema_view(
+    list=extend_schema(
+        tags=['Kamar'],
+        summary='Daftar kamar',
+        description='Mengambil daftar kamar. Mendukung filter berdasarkan kost dan status, serta pengurutan harga.',
+        parameters=[
+            OpenApiParameter(name='kost', description='ID kost untuk memfilter kamar.', required=False, type=int),
+            OpenApiParameter(
+                name='status',
+                description='Filter status kamar: `available`, `booked`, atau `occupied`.',
+                required=False,
+                type=str,
+            ),
+            OpenApiParameter(name='ordering', description='Urutkan berdasarkan `price`.', required=False, type=str),
+            OpenApiParameter(name='page', description='Nomor halaman hasil paginasi.', required=False, type=int),
+        ],
+    ),
+    retrieve=extend_schema(
+        tags=['Kamar'],
+        summary='Detail kamar',
+        description='Mengambil detail satu kamar.',
+    ),
+    create=extend_schema(
+        tags=['Kamar'],
+        summary='Buat kamar baru',
+        description='Menambahkan kamar baru pada kost milik owner yang sedang login.',
+    ),
+    update=extend_schema(
+        tags=['Kamar'],
+        summary='Perbarui kamar',
+        description='Memperbarui seluruh data kamar pada kost milik owner yang sedang login.',
+    ),
+    partial_update=extend_schema(
+        tags=['Kamar'],
+        summary='Perbarui sebagian data kamar',
+        description='Memperbarui sebagian atribut kamar pada kost milik owner yang sedang login.',
+    ),
+    destroy=extend_schema(
+        tags=['Kamar'],
+        summary='Hapus kamar',
+        description='Menghapus kamar dari kost milik owner yang sedang login.',
+        responses={204: OpenApiResponse(description='Kamar berhasil dihapus.')},
+    ),
+)(RoomViewSet)

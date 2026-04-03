@@ -105,10 +105,59 @@ REST_FRAMEWORK = {
 # Metadata Dokumentasi Swagger
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Ngekost.id API',
-    'DESCRIPTION': 'Dokumentasi REST API Ngekost.id Web Platform. Dibangun dengan Django REST Framework.',
+    'DESCRIPTION': (
+        'Dokumentasi REST API untuk platform marketplace kost Ngekost.id. '
+        'API ini mendukung alur registrasi dan autentikasi pengguna, pengelolaan '
+        'properti kost dan kamar oleh pemilik, proses booking oleh tenant, '
+        'unggah bukti pembayaran, verifikasi pembayaran oleh owner, serta '
+        'monitoring operasional oleh administrator.\n\n'
+        'Autentikasi menggunakan JWT Bearer Token. Untuk endpoint yang membutuhkan '
+        'otorisasi, klik tombol "Authorize" di Swagger UI lalu masukkan token dengan '
+        'format: `Bearer <access_token>`.'
+    ),
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'COMPONENT_SPLIT_REQUEST': True,
+    'SCHEMA_PATH_PREFIX': r'/api/v1',
+    'TAGS': [
+        {
+            'name': 'Autentikasi',
+            'description': 'Endpoint untuk registrasi akun tenant, login JWT, dan refresh access token.',
+        },
+        {
+            'name': 'Profil Pengguna',
+            'description': 'Endpoint untuk melihat dan memperbarui profil pengguna yang sedang login.',
+        },
+        {
+            'name': 'Kost',
+            'description': 'Endpoint katalog dan pengelolaan properti kost.',
+        },
+        {
+            'name': 'Kamar',
+            'description': 'Endpoint katalog dan pengelolaan kamar pada sebuah kost.',
+        },
+        {
+            'name': 'Booking',
+            'description': 'Endpoint transaksi pemesanan kamar dan pelacakan status booking.',
+        },
+        {
+            'name': 'Pembayaran',
+            'description': 'Endpoint unggah bukti pembayaran dan verifikasi oleh pemilik kost.',
+        },
+        {
+            'name': 'Admin Panel',
+            'description': 'Endpoint administratif untuk pengawasan pengguna, kost, dan booking.',
+        },
+    ],
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'displayRequestDuration': True,
+        'persistAuthorization': True,
+        'filter': True,
+        'tagsSorter': 'alpha',
+        'operationsSorter': 'alpha',
+        'docExpansion': 'list',
+    },
 }
 
 # Simple JWT Configuration
