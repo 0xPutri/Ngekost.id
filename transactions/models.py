@@ -12,17 +12,58 @@ class Booking(models.Model):
         ('rejected', 'Ditolak'),
     )
 
-    tenant = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookings')
-    room = models.ForeignKey(Room, on_delete=models.PROTECT, related_name='bookings')
-    start_date = models.DateField()
-    duration_months = models.PositiveIntegerField(default=1)
-    total_price = models.DecimalField(max_digits=12, decimal_places=2, editable=False)
-    status = models.CharField(max_length=25, choices=STATUS_CHOICES, default='pending_payment')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    tenant = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='bookings',
+        verbose_name='Tenant',
+        help_text='Pengguna tenant yang melakukan pemesanan kamar.',
+    )
+    room = models.ForeignKey(
+        Room,
+        on_delete=models.PROTECT,
+        related_name='bookings',
+        verbose_name='Kamar',
+        help_text='Kamar yang dipesan dalam transaksi ini.',
+    )
+    start_date = models.DateField(
+        verbose_name='Tanggal Mulai Sewa',
+        help_text='Tanggal mulai masa sewa yang diajukan tenant.',
+    )
+    duration_months = models.PositiveIntegerField(
+        default=1,
+        verbose_name='Durasi Sewa (Bulan)',
+        help_text='Lama sewa dalam satuan bulan.',
+    )
+    total_price = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        editable=False,
+        verbose_name='Total Harga',
+        help_text='Total biaya booking yang dihitung otomatis berdasarkan harga kamar dan durasi sewa.',
+    )
+    status = models.CharField(
+        max_length=25,
+        choices=STATUS_CHOICES,
+        default='pending_payment',
+        verbose_name='Status Booking',
+        help_text='Status transaksi booking: menunggu pembayaran, verifikasi, lunas, atau ditolak.',
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Dibuat Pada',
+        help_text='Waktu saat booking pertama kali dibuat.',
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Diperbarui Pada',
+        help_text='Waktu terakhir data booking diperbarui.',
+    )
 
     class Meta:
         ordering = ['-created_at']
+        verbose_name = 'Booking'
+        verbose_name_plural = 'Daftar Booking'
 
     def __str__(self):
         return f"Booking #{self.id} - {self.tenant.username} - {self.room.room_number}"
@@ -33,9 +74,27 @@ class Booking(models.Model):
         super().save(*args, **kwargs)
 
 class PaymentProof(models.Model):
-    booking = models.OneToOneField(Booking, on_delete=models.CASCADE, related_name='payment_proof')
-    image = models.ImageField(upload_to='payments/%Y/%m/%d/')
-    uploaded_at = models.DateTimeField(auto_now_add=True)
+    booking = models.OneToOneField(
+        Booking,
+        on_delete=models.CASCADE,
+        related_name='payment_proof',
+        verbose_name='Booking',
+        help_text='Booking yang terkait dengan bukti pembayaran ini.',
+    )
+    image = models.ImageField(
+        upload_to='payments/%Y/%m/%d/',
+        verbose_name='Gambar Bukti Pembayaran',
+        help_text='File gambar bukti transfer atau pembayaran yang diunggah tenant.',
+    )
+    uploaded_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Diunggah Pada',
+        help_text='Waktu saat bukti pembayaran diunggah ke sistem.',
+    )
+
+    class Meta:
+        verbose_name = 'Bukti Pembayaran'
+        verbose_name_plural = 'Bukti Pembayaran'
 
     def __str__(self):
         return f"Bukti Pembayaran - Booking #{self.booking.id}"

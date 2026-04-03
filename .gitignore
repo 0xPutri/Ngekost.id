@@ -1,5 +1,5 @@
 # AI Agent Context (private instructions)
-docs/context/ai/
+ai_context/**
 
 # Python
 **pycache**/
@@ -12,9 +12,9 @@ env/
 .venv/
 
 # Django
+db.sqlite3-journal
 *.log
 db.sqlite3
-db.sqlite3-journal
 media/
 
 # Static files
