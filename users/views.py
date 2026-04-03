@@ -37,9 +37,24 @@ logger = logging.getLogger('ngekost.users')
     ],
 )
 class CustomTokenObtainPairView(TokenObtainPairView):
+    """
+    Menangani proses login dan penerbitan token JWT pengguna.
+
+    View ini juga mencatat hasil autentikasi agar aktivitas login dapat
+    dipantau untuk kebutuhan operasional dan audit dasar.
+    """
     serializer_class = CustomTokenObtainPairSerializer
 
     def post(self, request, *args, **kwargs):
+        """
+        Memproses permintaan login pengguna.
+
+        Args:
+            request (Request): Request yang memuat username dan password.
+
+        Returns:
+            Response: Respons token JWT atau pesan kegagalan autentikasi.
+        """
         response = super().post(request, *args, **kwargs)
         username = request.data.get('username')
 
@@ -69,11 +84,26 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     },
 )
 class RegisterView(generics.CreateAPIView):
+    """
+    Menangani registrasi akun tenant baru pada platform.
+
+    Endpoint ini dibuka untuk publik, tetapi tetap membatasi pembuatan akun
+    hanya pada peran tenant sesuai aturan bisnis aplikasi.
+    """
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = RegisterSerializer
 
     def create(self, request, *args, **kwargs):
+        """
+        Memvalidasi data registrasi dan mengembalikan respons yang ramah klien.
+
+        Args:
+            request (Request): Request yang memuat data akun baru.
+
+        Returns:
+            Response: Respons sukses registrasi beserta data ringkas akun.
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = self.perform_create(serializer)
@@ -97,6 +127,15 @@ class RegisterView(generics.CreateAPIView):
         )
     
     def perform_create(self, serializer):
+        """
+        Menyimpan akun baru menggunakan serializer registrasi.
+
+        Args:
+            serializer (RegisterSerializer): Serializer yang sudah tervalidasi.
+
+        Returns:
+            CustomUser: Pengguna baru yang berhasil dibuat.
+        """
         return serializer.save()
 
 @extend_schema_view(
@@ -117,13 +156,34 @@ class RegisterView(generics.CreateAPIView):
     ),
 )
 class UserProfileView(generics.RetrieveUpdateAPIView):
+    """
+    Menampilkan dan memperbarui profil pengguna yang sedang login.
+
+    View ini memastikan setiap pengguna hanya berinteraksi dengan profilnya
+    sendiri tanpa perlu mengirim identitas target secara terpisah.
+    """
     serializer_class = UserProfileSerializer
     permission_classes = (IsAuthenticated,)
 
     def get_object(self):
+        """
+        Mengambil objek pengguna aktif dari request saat ini.
+
+        Returns:
+            CustomUser: Pengguna yang sedang terautentikasi.
+        """
         return self.request.user
     
     def update(self, request, *args, **kwargs):
+        """
+        Memperbarui data profil pengguna aktif.
+
+        Args:
+            request (Request): Request yang memuat data profil baru.
+
+        Returns:
+            Response: Respons sukses beserta data profil terbaru.
+        """
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)

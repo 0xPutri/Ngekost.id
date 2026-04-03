@@ -5,6 +5,12 @@ from kosts.models import Room
 User = get_user_model()
 
 class Booking(models.Model):
+    """
+    Menyimpan transaksi pemesanan kamar oleh tenant.
+
+    Model ini merekam kamar yang dipesan, durasi sewa, total biaya, dan
+    status alur pembayaran sampai verifikasi selesai.
+    """
     STATUS_CHOICES = (
         ('pending_payment', 'Menunggu Pembayaran'),
         ('waiting_verification', 'Menunggu Verifikasi'),
@@ -66,14 +72,33 @@ class Booking(models.Model):
         verbose_name_plural = 'Daftar Booking'
 
     def __str__(self):
+        """
+        Mengembalikan label booking untuk kebutuhan internal sistem.
+
+        Returns:
+            str: Ringkasan booking berisi id, tenant, dan nomor kamar.
+        """
         return f"Booking #{self.id} - {self.tenant.username} - {self.room.room_number}"
     
     def save(self, *args, **kwargs):
+        """
+        Menyimpan booking sambil menghitung total harga awal jika diperlukan.
+
+        Args:
+            *args: Argumen tambahan bawaan method `save`.
+            **kwargs: Opsi tambahan bawaan method `save`.
+        """
         if not self.total_price and self.room:
             self.total_price = self.room.price * self.duration_months
         super().save(*args, **kwargs)
 
 class PaymentProof(models.Model):
+    """
+    Menyimpan bukti pembayaran yang diunggah tenant.
+
+    Model ini terhubung satu-satu dengan booking agar setiap transaksi hanya
+    memiliki satu bukti pembayaran aktif untuk diverifikasi owner.
+    """
     booking = models.OneToOneField(
         Booking,
         on_delete=models.CASCADE,
@@ -97,4 +122,10 @@ class PaymentProof(models.Model):
         verbose_name_plural = 'Bukti Pembayaran'
 
     def __str__(self):
+        """
+        Mengembalikan label bukti pembayaran untuk tampilan internal.
+
+        Returns:
+            str: Nama singkat bukti pembayaran berdasarkan id booking.
+        """
         return f"Bukti Pembayaran - Booking #{self.booking.id}"

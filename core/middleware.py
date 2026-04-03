@@ -10,10 +10,32 @@ logger = logging.getLogger('ngekost.request')
 
 
 class RequestContextLoggingMiddleware:
+    """
+    Menyiapkan konteks logging untuk setiap request API.
+
+    Middleware ini menambahkan request id, identitas pengguna, durasi proses,
+    dan penanganan galat global ke alur request Django.
+    """
+
     def __init__(self, get_response):
+        """
+        Menyimpan callable berikutnya dalam rantai middleware.
+
+        Args:
+            get_response (Callable): Handler request berikutnya dari Django.
+        """
         self.get_response = get_response
 
     def __call__(self, request):
+        """
+        Memproses request sambil mengelola konteks dan log operasional.
+
+        Args:
+            request (HttpRequest): Request yang masuk ke aplikasi.
+
+        Returns:
+            HttpResponse: Respons akhir dari aplikasi atau handler galat global.
+        """
         request_id = request.headers.get('X-Request-ID', str(uuid.uuid4()))
         request._logging_started_at = time.perf_counter()
 

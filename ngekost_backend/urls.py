@@ -11,7 +11,18 @@ handler404 = 'core.exceptions.not_found_handler'
 handler500 = 'core.exceptions.server_error_handler'
 
 def api_root_view(request):
-    """Root endpoint untuk mengecek status API."""
+    """
+    Menyediakan endpoint dasar untuk mengecek status API.
+
+    Endpoint ini berguna sebagai penanda bahwa layanan backend Ngekost.id
+    berjalan dan siap menerima request berikutnya.
+
+    Args:
+        request (HttpRequest): Request yang masuk ke root API.
+
+    Returns:
+        JsonResponse: Respons status sederhana dari layanan API.
+    """
     return JsonResponse({
         "status": "sukses",
         "pesan": "API Ngekost.id berjalan dengan baik.",

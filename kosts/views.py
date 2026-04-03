@@ -50,6 +50,12 @@ logger = logging.getLogger('ngekost.kosts')
     ),
 )
 class KostViewSet(viewsets.ModelViewSet):
+    """
+    Mengelola endpoint daftar, detail, dan pemeliharaan data kost.
+
+    ViewSet ini melayani kebutuhan tenant untuk mencari kost sekaligus
+    kebutuhan owner untuk membuat dan mengelola properti miliknya.
+    """
     queryset = Kost.objects.all().prefetch_related('rooms') # Mencegah N+1 Queries
     permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -59,11 +65,23 @@ class KostViewSet(viewsets.ModelViewSet):
     ordering_fields = ['created_at']
 
     def get_serializer_class(self):
+        """
+        Memilih serializer sesuai jenis aksi yang sedang dijalankan.
+
+        Returns:
+            type[Serializer]: Serializer detail untuk `retrieve`, selain itu serializer ringkas.
+        """
         if self.action == 'retrieve':
             return KostDetailSerializer
         return KostSerializer
     
     def perform_create(self, serializer):
+        """
+        Menyimpan kost baru dengan owner dari pengguna aktif.
+
+        Args:
+            serializer (KostSerializer): Serializer yang sudah tervalidasi.
+        """
         kost = serializer.save(owner=self.request.user)
         logger.info(
             'Data kost baru berhasil dibuat.',
@@ -71,6 +89,12 @@ class KostViewSet(viewsets.ModelViewSet):
         )
 
     def perform_update(self, serializer):
+        """
+        Menyimpan perubahan data kost dan mencatat aktivitasnya.
+
+        Args:
+            serializer (KostSerializer): Serializer yang membawa data terbaru.
+        """
         kost = serializer.save()
         logger.info(
             'Data kost berhasil diperbarui.',
@@ -78,6 +102,12 @@ class KostViewSet(viewsets.ModelViewSet):
         )
 
     def perform_destroy(self, instance):
+        """
+        Menghapus data kost yang dipilih pengguna berwenang.
+
+        Args:
+            instance (Kost): Objek kost yang akan dihapus.
+        """
         logger.warning(
             'Data kost akan dihapus.',
             extra={'kost_id': instance.id, 'owner_id': instance.owner_id, 'nama_kost': instance.name},
@@ -85,6 +115,12 @@ class KostViewSet(viewsets.ModelViewSet):
         instance.delete()
 
 class RoomViewSet(viewsets.ModelViewSet):
+    """
+    Mengelola endpoint kamar pada setiap properti kost.
+
+    ViewSet ini dipakai owner untuk menambah dan memperbarui kamar, serta
+    dipakai tenant untuk melihat ketersediaan kamar secara terbuka.
+    """
     queryset = Room.objects.all().select_related('kost') # Mencegah N+1 Queries
     serializer_class = RoomSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
@@ -94,6 +130,12 @@ class RoomViewSet(viewsets.ModelViewSet):
     ordering_fields = ['price']
 
     def perform_create(self, serializer):
+        """
+        Menyimpan kamar baru dan mencatat aktivitas pembuatannya.
+
+        Args:
+            serializer (RoomSerializer): Serializer yang sudah tervalidasi.
+        """
         room = serializer.save()
         logger.info(
             'Data kamar baru berhasil dibuat.',
@@ -106,6 +148,12 @@ class RoomViewSet(viewsets.ModelViewSet):
         )
 
     def perform_update(self, serializer):
+        """
+        Menyimpan perubahan data kamar dan mencatat hasilnya.
+
+        Args:
+            serializer (RoomSerializer): Serializer yang membawa data terbaru.
+        """
         room = serializer.save()
         logger.info(
             'Data kamar berhasil diperbarui.',
@@ -118,6 +166,12 @@ class RoomViewSet(viewsets.ModelViewSet):
         )
 
     def perform_destroy(self, instance):
+        """
+        Menghapus data kamar yang dipilih pengguna berwenang.
+
+        Args:
+            instance (Room): Objek kamar yang akan dihapus.
+        """
         logger.warning(
             'Data kamar akan dihapus.',
             extra={

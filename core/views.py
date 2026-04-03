@@ -37,6 +37,12 @@ logger = logging.getLogger('ngekost.admin')
     ),
 )
 class AdminUserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+    """
+    Mengelola data pengguna pada panel admin API.
+
+    ViewSet ini memberi administrator akses untuk melihat detail, mencari,
+    dan menghapus akun pengguna sesuai kebutuhan pengawasan sistem.
+    """
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserProfileSerializer
     permission_classes = [IsAdminRole]
@@ -46,6 +52,12 @@ class AdminUserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.
     search_fields = ['username', 'email', 'first_name']
 
     def perform_destroy(self, instance):
+        """
+        Menghapus akun pengguna dan mencatat aktivitas admin.
+
+        Args:
+            instance (CustomUser): Pengguna yang akan dihapus.
+        """
         logger.warning(
             'Administrator menghapus akun pengguna.',
             extra={'user_id_target': instance.id, 'role_target': instance.role, 'email': instance.email},
@@ -53,6 +65,12 @@ class AdminUserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.
         instance.delete()
 
 class AdminKostViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
+    """
+    Mengelola data kost pada panel admin API.
+
+    ViewSet ini dipakai administrator untuk meninjau, menelusuri, dan
+    menghapus data kost yang ada di platform.
+    """
     queryset = Kost.objects.select_related('owner').prefetch_related('rooms').order_by('-created_at')
     serializer_class = KostSerializer
     permission_classes = [IsAdminRole]
@@ -62,6 +80,12 @@ class AdminKostViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.
     search_fields = ['name', 'address']
 
     def perform_destroy(self, instance):
+        """
+        Menghapus data kost dan mencatat aktivitas admin.
+
+        Args:
+            instance (Kost): Kost yang akan dihapus.
+        """
         logger.warning(
             'Administrator menghapus data kost.',
             extra={'kost_id': instance.id, 'owner_id': instance.owner_id, 'nama_kost': instance.name},
@@ -69,6 +93,12 @@ class AdminKostViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.
         instance.delete()
 
 class AdminBookingViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """
+    Menyajikan data booking untuk kebutuhan audit administrator.
+
+    ViewSet ini membantu admin memantau transaksi tenant dan owner tanpa
+    memberikan operasi perubahan status secara langsung.
+    """
     queryset = Booking.objects.select_related(
         'tenant', 'room', 'room__kost'
     ).prefetch_related('payment_proof').order_by('-created_at')

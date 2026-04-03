@@ -1,12 +1,17 @@
 #!/usr/bin/env python
-"""Django's command-line utility for administrative tasks."""
+"""Menyediakan utilitas baris perintah untuk pengelolaan proyek Django."""
 import sys
 import os
 from ngekost_backend.env import load_environment
 
 
 def main():
-    """Run administrative tasks."""
+    """
+    Menjalankan perintah administratif untuk proyek Ngekost.id.
+
+    Fungsi ini memuat environment proyek lebih dulu agar pengaturan Django
+    dapat dibaca dengan konsisten pada setiap perintah manajemen.
+    """
     load_environment()
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ngekost_backend.settings.development')
     try:

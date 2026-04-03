@@ -4,6 +4,12 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 class Kost(models.Model):
+    """
+    Menyimpan data properti kost yang dipublikasikan owner.
+
+    Model ini menjadi pusat informasi kost, mulai dari alamat, fasilitas,
+    deskripsi, hingga relasinya dengan kamar yang tersedia.
+    """
     owner = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -61,10 +67,22 @@ class Kost(models.Model):
         verbose_name_plural = 'Daftar Kost'
 
     def __str__(self):
+        """
+        Mengembalikan label kost yang mudah dikenali di tampilan internal.
+
+        Returns:
+            str: Nama kost beserta username owner.
+        """
         return f"{self.name} - {self.owner.username}"
     
 
 class Room(models.Model):
+    """
+    Menyimpan data kamar yang berada di dalam satu kost.
+
+    Model ini memuat informasi harga, status ketersediaan, dan identitas
+    kamar yang akan dipakai pada proses pencarian serta booking.
+    """
     STATUS_CHOICES = (
         ('available', 'Tersedia'),
         ('booked', 'Dipesan'),
@@ -115,4 +133,10 @@ class Room(models.Model):
         verbose_name_plural = 'Daftar Kamar'
 
     def __str__(self):
+        """
+        Mengembalikan label kamar untuk kebutuhan admin dan debugging.
+
+        Returns:
+            str: Nomor kamar beserta nama kost induknya.
+        """
         return f"Kamar {self.room_number} - {self.kost.name}"

@@ -102,11 +102,23 @@ logger = logging.getLogger('ngekost.transactions')
     ),
 )
 class BookingViewSet(viewsets.ModelViewSet):
+    """
+    Mengelola transaksi booking dan alur pembayaran kamar.
+
+    ViewSet ini menyesuaikan data yang terlihat berdasarkan peran pengguna
+    serta menangani unggah dan verifikasi pembayaran secara aman.
+    """
     queryset = Booking.objects.none()
     serializer_class = BookingSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        """
+        Mengambil queryset booking sesuai hak akses pengguna aktif.
+
+        Returns:
+            QuerySet: Daftar booking yang boleh dilihat tenant, owner, atau admin.
+        """
         if getattr(self, 'swagger_fake_view', False):
             return Booking.objects.none()
 
@@ -122,6 +134,16 @@ class BookingViewSet(viewsets.ModelViewSet):
         return qs.none()
     
     def perform_create(self, serializer):
+        """
+        Membuat booking baru dan mengunci kamar selama proses transaksi.
+
+        Args:
+            serializer (BookingSerializer): Serializer booking yang sudah valid.
+
+        Raises:
+            PermissionDenied: Jika pengguna bukan tenant.
+            ValidationError: Jika kamar sudah tidak tersedia.
+        """
         if self.request.user.role != 'tenant':
             logger.warning(
                 'Pembuatan booking ditolak karena peran pengguna tidak sesuai.',
@@ -181,6 +203,16 @@ class BookingViewSet(viewsets.ModelViewSet):
     )
     @action(detail=True, methods=['post'], parser_classes=[parsers.MultiPartParser, parsers.FormParser])
     def upload_payment(self, request, pk=None):
+        """
+        Mengunggah bukti pembayaran untuk booking milik tenant.
+
+        Args:
+            request (Request): Request multipart yang memuat file bukti bayar.
+            pk (str | None): ID booking dari URL.
+
+        Returns:
+            Response: Respons hasil unggah bukti pembayaran.
+        """
         booking = self.get_object()
         if request.user != booking.tenant:
             logger.warning(
@@ -260,6 +292,16 @@ class BookingViewSet(viewsets.ModelViewSet):
     )
     @action(detail=True, methods=['post'])
     def verify_payment(self, request, pk=None):
+        """
+        Memproses keputusan owner atas bukti pembayaran booking.
+
+        Args:
+            request (Request): Request yang memuat aksi `approve` atau `reject`.
+            pk (str | None): ID booking dari URL.
+
+        Returns:
+            Response: Respons hasil verifikasi beserta status booking terbaru.
+        """
         booking = self.get_object()
 
         if request.user != booking.room.kost.owner:

@@ -2,6 +2,12 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 class CustomUser(AbstractUser):
+    """
+    Menyimpan data pengguna yang terlibat dalam platform Ngekost.id.
+
+    Model ini memperluas pengguna bawaan Django agar sistem dapat membedakan
+    peran admin, owner, dan tenant beserta informasi kontak dasarnya.
+    """
     ROLE_CHOICES = (
         ('admin', 'Admin'),
         ('owner', 'Owner'),
@@ -33,4 +39,13 @@ class CustomUser(AbstractUser):
         verbose_name_plural = 'Pengguna'
 
     def __str__(self):
+        """
+        Mengembalikan representasi singkat pengguna untuk tampilan internal.
+
+        Format ini membantu admin dan developer mengenali username beserta
+        peran aktif pengguna saat data ditampilkan.
+
+        Returns:
+            str: Nama pengguna beserta label perannya.
+        """
         return f"{self.username} ({self.get_role_display()})"
