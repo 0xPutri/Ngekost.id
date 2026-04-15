@@ -3,12 +3,13 @@ from rest_framework import viewsets, filters, parsers
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view
-from .models import Kost, KostImage, Room, RoomImage
+from .models import Kost, KostImage, PaymentMethod, Room, RoomImage
 from .serializers import (
     KostDetailSerializer,
     KostImageSerializer,
     KostImageWriteSerializer,
     KostSerializer,
+    PaymentMethodSerializer,
     RoomImageSerializer,
     RoomImageWriteSerializer,
     RoomSerializer,
@@ -307,6 +308,106 @@ class RoomImageViewSet(viewsets.ModelViewSet):
             return RoomImageWriteSerializer
         return RoomImageSerializer
 
+
+@extend_schema_view(
+    list=extend_schema(
+        tags=['Metode Pembayaran'],
+        summary='Daftar metode pembayaran kost',
+        description='Mengambil daftar metode pembayaran yang tersedia untuk sebuah kost.',
+    ),
+    retrieve=extend_schema(
+        tags=['Metode Pembayaran'],
+        summary='Detail metode pembayaran kost',
+        description='Mengambil detail satu metode pembayaran yang tersedia untuk sebuah kost.',
+    ),
+    create=extend_schema(
+        tags=['Metode Pembayaran'],
+        summary='Unggah metode pembayaran baru',
+        description='Menambahkan metode pembayaran baru ke sebuah kost. Hanya dapat dilakukan oleh pemilik kost tersebut.',
+    ),
+    destroy=extend_schema(
+        tags=['Metode Pembayaran'],
+        summary='Hapus metode pembayaran',
+        description='Menghapus metode pembayaran dari sebuah kost. Hanya dapat dilakukan oleh pemilik kost tersebut.',
+    )
+)
+class PaymentMethodViewSet(viewsets.ModelViewSet):
+    """
+    Mengelola metode pembayaran untuk setiap kost.
+
+    Endpoint ini membantu tenant melihat opsi pembayaran yang tersedia dan
+    membantu owner mengelola metode pembayaran miliknya.
+    """
+    serializer_class = PaymentMethodSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    parser_classes = [parsers.MultiPartParser, parsers.FormParser, parsers.JSONParser]
+    http_method_names = ['get', 'post', 'delete', 'head', 'options']
+
+    def get_queryset(self):
+        """
+        Mengambil daftar metode pembayaran milik kost yang diminta.
+
+        Fungsi ini membaca `kost_pk` dari URL agar data yang tampil tetap
+        sesuai dengan kost yang sedang dibuka.
+
+        Returns:
+            QuerySet: Daftar metode pembayaran untuk kost terkait.
+        """
+        kost_pk = self.kwargs.get('kost_pk')
+        if kost_pk:
+            return PaymentMethod.objects.filter(kost_id=kost_pk)
+        return PaymentMethod.objects.none()
+
+    def perform_create(self, serializer):
+        """
+        Menyimpan metode pembayaran baru untuk kost yang dipilih.
+
+        Fungsi ini memastikan hanya owner dari kost terkait yang dapat
+        menambahkan metode pembayaran baru.
+
+        Args:
+            serializer (PaymentMethodSerializer): Serializer yang sudah valid.
+
+        Raises:
+            PermissionDenied: Jika kost tidak ditemukan atau bukan milik owner.
+        """
+        from rest_framework.exceptions import PermissionDenied, ValidationError
+        
+        kost_pk = self.kwargs.get('kost_pk')
+        try:
+            kost = Kost.objects.get(pk=kost_pk)
+        except Kost.DoesNotExist:
+            raise PermissionDenied('Kost tidak ditemukan.')
+
+        if kost.owner != self.request.user:
+            raise PermissionDenied('Anda bukan pemilik kost ini.')
+            
+        name = serializer.validated_data.get('name')
+        if PaymentMethod.objects.filter(kost=kost, name__iexact=name).exists():
+            raise ValidationError({'name': f'Metode pembayaran "{name}" sudah ada untuk kost ini.'})
+
+        serializer.save(kost=kost)
+
+    def perform_destroy(self, instance):
+        """
+        Menghapus metode pembayaran milik kost yang sesuai.
+
+        Fungsi ini menjaga agar hanya owner yang berwenang yang dapat
+        menghapus metode pembayaran tersebut.
+
+        Args:
+            instance (PaymentMethod): Objek metode pembayaran yang dihapus.
+
+        Raises:
+            PermissionDenied: Jika pengguna bukan pemilik metode pembayaran.
+        """
+        from rest_framework.exceptions import PermissionDenied
+
+        if instance.kost.owner != self.request.user:
+            raise PermissionDenied('Anda tidak diizinkan menghapus metode pembayaran ini.')
+        
+        instance.delete()
+        
 
 RoomViewSet = extend_schema_view(
     list=extend_schema(

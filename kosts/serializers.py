@@ -2,7 +2,7 @@ from decimal import Decimal
 from rest_framework import serializers
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
-from .models import Kost, KostImage, Room, RoomImage
+from .models import Kost, KostImage, PaymentMethod, Room, RoomImage
 
 
 class RoomImageSerializer(serializers.ModelSerializer):
@@ -156,7 +156,21 @@ class KostSerializer(serializers.ModelSerializer):
         if rooms.exists():
             return min(room.price for room in rooms)
         return None
-    
+
+
+class PaymentMethodSerializer(serializers.ModelSerializer):
+    """
+    Menyajikan data metode pembayaran secara ringkas.
+
+    Serializer ini membantu API menampilkan informasi metode pembayaran
+    dengan bentuk yang mudah dibaca oleh frontend.
+    """
+    class Meta:
+        model = PaymentMethod
+        fields = ['id', 'kost', 'name', 'image', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'kost', 'created_at', 'updated_at']
+
+
 class KostDetailSerializer(KostSerializer):
     """
     Menyajikan detail kost lengkap beserta daftar kamarnya.
@@ -165,6 +179,7 @@ class KostDetailSerializer(KostSerializer):
     spesifik dan membutuhkan informasi kamar sekaligus.
     """
     rooms = RoomSerializer(many=True, read_only=True)
+    payment_methods = PaymentMethodSerializer(many=True, read_only=True)
 
     class Meta(KostSerializer.Meta):
-        fields = KostSerializer.Meta.fields + ['rooms']
+        fields = KostSerializer.Meta.fields + ['rooms', 'payment_methods']

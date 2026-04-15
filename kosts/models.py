@@ -236,3 +236,56 @@ class RoomImage(models.Model):
         if self.caption:
             return f"Kamar {self.room.room_number} - {self.caption}"
         return f"Kamar {self.room.room_number} - Gambar #{self.pk}"
+
+
+class PaymentMethod(models.Model):
+    """
+    Menyimpan data metode pembayaran yang disediakan oleh owner kost.
+
+    Setiap instance mewakili satu opsi pembayaran (misalnya, QRIS atau
+    nomor rekening) yang dapat digunakan oleh tenant sebelum mengunggah
+    bukti transfer.
+    """
+    kost = models.ForeignKey(
+        Kost,
+        on_delete=models.CASCADE,
+        related_name='payment_methods',
+        verbose_name='Kost',
+        help_text='Kost yang menyediakan metode pembayaran ini.',
+    )
+    name = models.CharField(
+        max_length=100,
+        verbose_name='Nama Metode Pembayaran',
+        help_text='Contoh: QRIS, Transfer Bank ABC',
+    )
+    image = models.ImageField(
+        upload_to='payment_methods/%Y/%m/%d/',
+        verbose_name='Gambar QRIS/Metode Pembayaran',
+        help_text='Unggah gambar QRIS atau detail rekening.',
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Dibuat Pada',
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Diperbarui Pada',
+    )
+
+    class Meta:
+        ordering = ['created_at']
+        unique_together = ('kost', 'name')
+        verbose_name = 'Metode Pembayaran'
+        verbose_name_plural = 'Daftar Metode Pembayaran'
+
+    def __str__(self):
+        """
+        Mengembalikan label metode pembayaran yang mudah dikenali.
+
+        Label ini membantu admin dan owner membaca hubungan antara kost
+        dan metode pembayaran dengan cepat.
+
+        Returns:
+            str: Nama kost beserta nama metode pembayaran.
+        """
+        return f"{self.kost.name} - {self.name}"

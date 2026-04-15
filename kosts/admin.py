@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Kost, KostImage, Room, RoomImage
+from .models import Kost, KostImage, PaymentMethod, Room, RoomImage
 
 class RoomInline(admin.TabularInline):
     """
@@ -84,3 +84,12 @@ class RoomImageAdmin(admin.ModelAdmin):
     list_display = ('room', 'caption', 'created_at')
     list_filter = ('room', 'created_at')
     search_fields = ('room__room_number', 'room__kost__name', 'caption')
+
+@admin.register(PaymentMethod)
+class PaymentMethodAdmin(admin.ModelAdmin):
+    """
+    Menata tampilan daftar metode pembayaran pada panel admin.
+    """
+    list_display = ('name', 'kost', 'created_at')
+    list_filter = ('kost', 'created_at')
+    search_fields = ('name', 'kost__name', 'kost__owner__username')
