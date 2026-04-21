@@ -1,7 +1,8 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin, TabularInline
 from .models import Kost, KostImage, PaymentMethod, Room, RoomImage
 
-class RoomInline(admin.TabularInline):
+class RoomInline(TabularInline):
     """
     Menampilkan kamar langsung di halaman admin kost.
 
@@ -10,9 +11,10 @@ class RoomInline(admin.TabularInline):
     """
     model = Room
     extra = 1
+    tab = True
 
 
-class KostImageInline(admin.TabularInline):
+class KostImageInline(TabularInline):
     """
     Menampilkan galeri gambar langsung di halaman admin kost.
 
@@ -21,9 +23,10 @@ class KostImageInline(admin.TabularInline):
     """
     model = KostImage
     extra = 1
+    tab = True
 
 
-class RoomImageInline(admin.TabularInline):
+class RoomImageInline(TabularInline):
     """
     Menampilkan galeri gambar langsung di halaman admin kamar.
 
@@ -32,9 +35,10 @@ class RoomImageInline(admin.TabularInline):
     """
     model = RoomImage
     extra = 1
+    tab = True
 
 @admin.register(Kost)
-class KostAdmin(admin.ModelAdmin):
+class KostAdmin(ModelAdmin):
     """
     Menata tampilan daftar kost pada panel admin Django.
 
@@ -47,7 +51,7 @@ class KostAdmin(admin.ModelAdmin):
     inlines = [RoomInline, KostImageInline]
 
 @admin.register(Room)
-class RoomAdmin(admin.ModelAdmin):
+class RoomAdmin(ModelAdmin):
     """
     Menata tampilan daftar kamar pada panel admin Django.
 
@@ -61,7 +65,7 @@ class RoomAdmin(admin.ModelAdmin):
 
 
 @admin.register(KostImage)
-class KostImageAdmin(admin.ModelAdmin):
+class KostImageAdmin(ModelAdmin):
     """
     Menata tampilan daftar gambar kost pada panel admin Django.
 
@@ -74,7 +78,7 @@ class KostImageAdmin(admin.ModelAdmin):
 
 
 @admin.register(RoomImage)
-class RoomImageAdmin(admin.ModelAdmin):
+class RoomImageAdmin(ModelAdmin):
     """
     Menata tampilan daftar gambar kamar pada panel admin Django.
 
@@ -86,7 +90,7 @@ class RoomImageAdmin(admin.ModelAdmin):
     search_fields = ('room__room_number', 'room__kost__name', 'caption')
 
 @admin.register(PaymentMethod)
-class PaymentMethodAdmin(admin.ModelAdmin):
+class PaymentMethodAdmin(ModelAdmin):
     """
     Menata tampilan daftar metode pembayaran pada panel admin.
     """

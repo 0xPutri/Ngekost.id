@@ -1,0 +1,98 @@
+{% extends 'admin/base.html' %}
+
+{% load i18n %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            Workspace Overview
+        </h1>
+        <p class="text-gray-500 dark:text-gray-400">
+            Selamat datang di Dasbor Ngekost.id. Pantau metrik utama dan akses operasi dengan cepat.
+        </p>
+    </div>
+
+    {% if kpi %}
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+        {% for item in kpi %}
+        <div class="bg-white dark:bg-gray-900 p-5 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+            <div>
+                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ item.title }}</h3>
+                <div class="mt-2 text-3xl font-semibold text-gray-900 dark:text-white">{{ item.metric }}</div>
+            </div>
+            {% if item.footer %}
+            <div class="mt-4 text-xs text-gray-400 dark:text-gray-500">{{ item.footer }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        <!-- Quick Actions -->
+        <div class="xl:col-span-2 space-y-6">
+            <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Quick Actions</h2>
+                </div>
+                <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <a href="{% url 'admin:transactions_booking_changelist' %}" class="flex items-start p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/10 transition-all group">
+                        <div class="flex-shrink-0 bg-primary-100 dark:bg-primary-900/30 w-10 h-10 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mr-4 group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-xl">receipt_long</span>
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-gray-900 dark:text-white">Manage Bookings</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Review and update statuses.</p>
+                        </div>
+                    </a>
+                    
+                    <a href="{% url 'admin:transactions_paymentproof_changelist' %}" class="flex items-start p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/10 transition-all group">
+                        <div class="flex-shrink-0 bg-primary-100 dark:bg-primary-900/30 w-10 h-10 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mr-4 group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-xl">payments</span>
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-gray-900 dark:text-white">Verify Payments</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Check tenant payment proofs.</p>
+                        </div>
+                    </a>
+
+                    <a href="{% url 'admin:kosts_kost_changelist' %}" class="flex items-start p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/10 transition-all group">
+                        <div class="flex-shrink-0 bg-primary-100 dark:bg-primary-900/30 w-10 h-10 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mr-4 group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-xl">holiday_village</span>
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-gray-900 dark:text-white">Properties</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage kost & rooms.</p>
+                        </div>
+                    </a>
+
+                    <a href="{% url 'admin:users_customuser_changelist' %}" class="flex items-start p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/10 transition-all group">
+                        <div class="flex-shrink-0 bg-primary-100 dark:bg-primary-900/30 w-10 h-10 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 mr-4 group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-xl">people</span>
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-gray-900 dark:text-white">Users</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Administer tenant and owners.</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Actions -->
+        <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden flex flex-col">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Recent Activity</h2>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[400px] flex-grow">
+                {% include "unfold/helpers/history.html" %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

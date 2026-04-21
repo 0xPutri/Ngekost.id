@@ -6,6 +6,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # Application definition
 INSTALLED_APPS = [
+    'unfold',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -45,7 +46,7 @@ ROOT_URLCONF = 'ngekost_backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -214,4 +215,116 @@ LOGGING = {
             'propagate': False,
         },
     },
+}
+# Unfold Admin Configuration
+UNFOLD = {
+    "SITE_TITLE": "Ngekost.id Workspace",
+    "SITE_HEADER": "Ngekost.id",
+    "SITE_URL": "/",
+    "SITE_SYMBOL": "villa",
+    "DASHBOARD_CALLBACK": "core.dashboard.dashboard_callback",
+    "COLORS": {
+        "primary": {
+            "50": "249 250 251",
+            "100": "243 244 246",
+            "200": "229 231 235",
+            "300": "209 213 219",
+            "400": "156 163 175",
+            "500": "107 114 128",
+            "600": "75 85 99",
+            "700": "55 65 81",
+            "800": "31 41 55",
+            "900": "17 24 39",
+            "950": "3 7 18",
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": False,
+        "navigation": [
+            {
+                "title": "Dashboard",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Overview",
+                        "icon": "dashboard",
+                        "link": "/admin/",
+                    },
+                ],
+            },
+            {
+                "title": "Master Data",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Pengguna",
+                        "icon": "people",
+                        "link": "/admin/users/customuser/",
+                    },
+                    {
+                        "title": "Kost",
+                        "icon": "holiday_village",
+                        "link": "/admin/kosts/kost/",
+                    },
+                    {
+                        "title": "Kamar",
+                        "icon": "bed",
+                        "link": "/admin/kosts/room/",
+                    },
+                ],
+            },
+            {
+                "title": "Transaksi",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Metode Pembayaran",
+                        "icon": "account_balance_wallet",
+                        "link": "/admin/kosts/paymentmethod/",
+                    },
+                    {
+                        "title": "Booking",
+                        "icon": "receipt_long",
+                        "link": "/admin/transactions/booking/",
+                    },
+                    {
+                        "title": "Bukti Pembayaran",
+                        "icon": "payments",
+                        "link": "/admin/transactions/paymentproof/",
+                    },
+                ],
+            },
+            {
+                "title": "Media & Galeri",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Gambar Kost",
+                        "icon": "image",
+                        "link": "/admin/kosts/kostimage/",
+                    },
+                    {
+                        "title": "Gambar Kamar",
+                        "icon": "photo_library",
+                        "link": "/admin/kosts/roomimage/",
+                    },
+                ],
+            },
+        ],
+    },
+    "TABS": [
+        {
+            "models": [
+                "users.customuser",
+            ],
+            "items": [
+                {
+                    "title": "Users",
+                    "link": "/admin/users/customuser/",
+                    "icon": "people",
+                },
+            ],
+        },
+    ],
 }
