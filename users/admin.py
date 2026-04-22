@@ -2,16 +2,18 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from unfold.admin import ModelAdmin
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
+from core.admin_mixins import RoleBasedModelAdminMixin
 from .models import CustomUser
 
 @admin.register(CustomUser)
-class CustomUserAdmin(ModelAdmin, BaseUserAdmin):
+class CustomUserAdmin(RoleBasedModelAdminMixin, ModelAdmin, BaseUserAdmin):
     """
     Menata tampilan data pengguna pada panel admin Django.
 
     Konfigurasi ini membantu administrator melihat identitas pengguna dan
     informasi peran tambahan secara lebih rapi.
     """
+    owner_field_path = None
     form = UserChangeForm
     add_form = UserCreationForm
     change_password_form = AdminPasswordChangeForm
