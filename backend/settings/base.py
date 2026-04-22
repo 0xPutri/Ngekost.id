@@ -41,7 +41,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'ngekost_backend.urls'
+ROOT_URLCONF = 'backend.urls'
 
 TEMPLATES = [
     {
@@ -59,7 +59,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'ngekost_backend.wsgi.application'
+WSGI_APPLICATION = 'backend.wsgi.application'
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

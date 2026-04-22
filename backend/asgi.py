@@ -1,5 +1,5 @@
 """
-ASGI config for ngekost_backend project.
+ASGI config for backend project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 
@@ -9,9 +9,9 @@ https://docs.djangoproject.com/en/5.0/howto/deployment/asgi/
 import os
 
 from django.core.asgi import get_asgi_application
-from ngekost_backend.env import load_environment
+from backend.env import load_environment
 
 load_environment()
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ngekost_backend.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 
 application = get_asgi_application()
