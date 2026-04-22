@@ -40,22 +40,26 @@ logger = logging.getLogger('ngekost.kosts')
         summary='Buat kost baru',
         description='Mendaftarkan data kost baru. Hanya dapat dilakukan oleh pengguna dengan peran owner.',
         responses={201: KostSerializer, 403: OpenApiResponse(description='Hanya owner yang dapat membuat kost.')},
+        exclude=True,
     ),
     update=extend_schema(
         tags=['Kost'],
         summary='Perbarui kost',
         description='Memperbarui seluruh data kost milik owner yang sedang login.',
+        exclude=True,
     ),
     partial_update=extend_schema(
         tags=['Kost'],
         summary='Perbarui sebagian data kost',
         description='Memperbarui sebagian atribut kost milik owner yang sedang login.',
+        exclude=True,
     ),
     destroy=extend_schema(
         tags=['Kost'],
         summary='Hapus kost',
         description='Menghapus data kost milik owner yang sedang login.',
         responses={204: OpenApiResponse(description='Kost berhasil dihapus.')},
+        exclude=True,
     ),
 )
 class KostViewSet(viewsets.ModelViewSet):
@@ -213,22 +217,26 @@ class RoomViewSet(viewsets.ModelViewSet):
         summary='Unggah gambar kost',
         description='Mengunggah satu gambar ke kost milik owner yang sedang login.',
         request=KostImageWriteSerializer,
+        exclude=True,
     ),
     update=extend_schema(
         tags=['Kost'],
         summary='Perbarui gambar kost',
         description='Memperbarui data gambar kost milik owner yang sedang login.',
+        exclude=True,
     ),
     partial_update=extend_schema(
         tags=['Kost'],
         summary='Perbarui sebagian gambar kost',
         description='Memperbarui sebagian data gambar kost milik owner yang sedang login.',
+        exclude=True,
     ),
     destroy=extend_schema(
         tags=['Kost'],
         summary='Hapus gambar kost',
         description='Menghapus gambar kost milik owner yang sedang login.',
         responses={204: OpenApiResponse(description='Gambar kost berhasil dihapus.')},
+        exclude=True,
     ),
 )
 class KostImageViewSet(viewsets.ModelViewSet):
@@ -271,22 +279,26 @@ class KostImageViewSet(viewsets.ModelViewSet):
         summary='Unggah gambar kamar',
         description='Mengunggah satu gambar ke kamar pada kost milik owner yang sedang login.',
         request=RoomImageWriteSerializer,
+        exclude=True,
     ),
     update=extend_schema(
         tags=['Kamar'],
         summary='Perbarui gambar kamar',
         description='Memperbarui data gambar kamar milik owner yang sedang login.',
+        exclude=True,
     ),
     partial_update=extend_schema(
         tags=['Kamar'],
         summary='Perbarui sebagian gambar kamar',
         description='Memperbarui sebagian data gambar kamar milik owner yang sedang login.',
+        exclude=True,
     ),
     destroy=extend_schema(
         tags=['Kamar'],
         summary='Hapus gambar kamar',
         description='Menghapus gambar kamar milik owner yang sedang login.',
         responses={204: OpenApiResponse(description='Gambar kamar berhasil dihapus.')},
+        exclude=True,
     ),
 )
 class RoomImageViewSet(viewsets.ModelViewSet):
@@ -324,11 +336,13 @@ class RoomImageViewSet(viewsets.ModelViewSet):
         tags=['Metode Pembayaran'],
         summary='Unggah metode pembayaran baru',
         description='Menambahkan metode pembayaran baru ke sebuah kost. Hanya dapat dilakukan oleh pemilik kost tersebut.',
+        exclude=True,
     ),
     destroy=extend_schema(
         tags=['Metode Pembayaran'],
         summary='Hapus metode pembayaran',
         description='Menghapus metode pembayaran dari sebuah kost. Hanya dapat dilakukan oleh pemilik kost tersebut.',
+        exclude=True,
     )
 )
 class PaymentMethodViewSet(viewsets.ModelViewSet):
@@ -435,21 +449,25 @@ RoomViewSet = extend_schema_view(
         tags=['Kamar'],
         summary='Buat kamar baru',
         description='Menambahkan kamar baru pada kost milik owner yang sedang login.',
+        exclude=True,
     ),
     update=extend_schema(
         tags=['Kamar'],
         summary='Perbarui kamar',
         description='Memperbarui seluruh data kamar pada kost milik owner yang sedang login.',
+        exclude=True,
     ),
     partial_update=extend_schema(
         tags=['Kamar'],
         summary='Perbarui sebagian data kamar',
         description='Memperbarui sebagian atribut kamar pada kost milik owner yang sedang login.',
+        exclude=True,
     ),
     destroy=extend_schema(
         tags=['Kamar'],
         summary='Hapus kamar',
         description='Menghapus kamar dari kost milik owner yang sedang login.',
         responses={204: OpenApiResponse(description='Kamar berhasil dihapus.')},
+        exclude=True,
     ),
 )(RoomViewSet)

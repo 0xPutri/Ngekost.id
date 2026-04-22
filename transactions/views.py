@@ -70,6 +70,7 @@ logger = logging.getLogger('ngekost.transactions')
                 type=OpenApiTypes.INT,
             ),
         ],
+        exclude=True,
     ),
     partial_update=extend_schema(
         tags=['Booking'],
@@ -84,6 +85,7 @@ logger = logging.getLogger('ngekost.transactions')
                 type=OpenApiTypes.INT,
             ),
         ],
+        exclude=True,
     ),
     destroy=extend_schema(
         tags=['Booking'],
@@ -99,6 +101,7 @@ logger = logging.getLogger('ngekost.transactions')
             ),
         ],
         responses={204: OpenApiResponse(description='Booking berhasil dihapus.')},
+        exclude=True,
     ),
 )
 class BookingViewSet(viewsets.ModelViewSet):
@@ -289,6 +292,7 @@ class BookingViewSet(viewsets.ModelViewSet):
                 request_only=True,
             ),
         ],
+        exclude=True,
     )
     @action(detail=True, methods=['post'])
     def verify_payment(self, request, pk=None):

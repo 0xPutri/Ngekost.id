@@ -64,6 +64,7 @@ class AdminUserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.
         )
         instance.delete()
 
+@extend_schema(exclude=True)
 class AdminKostViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
     """
     Mengelola data kost pada panel admin API.
