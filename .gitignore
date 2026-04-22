@@ -6,6 +6,13 @@ ai_context/**
 *.py[cod]
 *$py.class
 
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
 # Virtual Environment
 venv/
 env/
