@@ -222,6 +222,7 @@ UNFOLD = {
     "SITE_HEADER": "Ngekost.id",
     "SITE_URL": "/",
     "SITE_SYMBOL": "villa",
+    "THEME": "light",
     "DASHBOARD_CALLBACK": "core.dashboard.dashboard_callback",
     "COLORS": {
         "primary": {
