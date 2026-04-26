@@ -20,9 +20,16 @@ class CustomUserAdmin(RoleBasedModelAdminMixin, ModelAdmin, BaseUserAdmin):
 
     model = CustomUser
     list_display = ['username', 'email', 'first_name', 'last_name', 'role', 'is_staff']
+    filter_horizontal = []
+    filter_vertical = ['groups', 'user_permissions']
     fieldsets = BaseUserAdmin.fieldsets + (
         ('Informasi Tambahan', {'fields': ('role', 'phone_number')}),
     )
     add_fieldsets = BaseUserAdmin.add_fieldsets + (
         ('Informasi Tambahan', {'fields': ('role', 'phone_number')}),
     )
+
+    class Media:
+        css = {
+            'all': ('admin/css/custom_admin.css',)
+        }

@@ -1,0 +1,26 @@
+.selector {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.selector .selector-available, 
+.selector .selector-chosen {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.selector select {
+    width: 100% !important;
+}
+
+.selector-stacked {
+    width: 100% !important;
+}
+
+@media (max-width: 1024px) {
+    .selector {
+        display: flex;
+        flex-direction: column;
+    }
+}
